@@ -284,10 +284,10 @@ function themeOf(rec) {
 
 /* desfecho: ticket | sim_encerrar | sim_ajudou | defeito | nao | sem */
 var OUTCOMES = [
-  { key: 'sim_encerrar', label: 'Sim, pode encerrar', short: 'Resolvido', tone: 'pos2' },
-  { key: 'sim_ajudou', label: 'Sim, ajudou ou esclareceu', short: 'Ajudou', tone: 'pos1' },
-  { key: 'sem', label: 'Sem resposta final', short: 'Sem resposta', tone: 'neu' },
-  { key: 'nao', label: 'Não, preciso de ajuda', short: 'Pediu mais ajuda', tone: 'warn' },
+  { key: 'sim_encerrar', label: 'Resolvido: sim, pode encerrar', short: 'Resolvido', tone: 'pos2' },
+  { key: 'sim_ajudou', label: 'Resolvido: sim, ajudou ou esclareceu', short: 'Ajudou', tone: 'pos1' },
+  { key: 'sem', label: 'Sem avaliação final', short: 'Sem avaliação', tone: 'neu' },
+  { key: 'nao', label: 'Disse que não ajudou e ficou', short: 'Não ajudou', tone: 'warn' },
   { key: 'ticket', label: 'Abriu ticket por e-mail', short: 'Ticket', tone: 'neg' }
 ];
 function classifyAnswer(v) {
@@ -295,14 +295,15 @@ function classifyAnswer(v) {
   if (/^sim\b.*encerrar/i.test(v)) return 'sim_encerrar';
   if (/^sim\b/i.test(v)) return 'sim_ajudou';
   if (/^(n[aã]o)\b.*(precis|ajuda|d[uú]vida)/i.test(v)) return 'nao';
-  if (/^ajuda com defeito/i.test(v)) return 'sim_ajudou';
+  if (/^sim,?\s+encontrei/i.test(v)) return 'sim_ajudou';
+  if (/^n[aã]o,?\s+ainda\s+n[aã]o\s+encontrei/i.test(v)) return 'nao';
   return null;
 }
 function outcomeOf(rec, cfg) {
   if (rec.k) return { key: 'ticket', via: 'outras_duvidas' };
   if (cfg && cfg.emailContinue && rec.g.duvida_do_cliente && /continuar por e-?mail/i.test(rec.g.duvida_do_cliente)) return { key: 'ticket', via: 'continuar_email' };
   var ans = null, k;
-  for (k in rec.g) if (/^ajudou_/.test(k)) { var c = classifyAnswer(rec.g[k]); if (c) ans = c; }
+  for (k in rec.g) if (/^(ajudou|encontrou_o_produto)/.test(k)) { var c = classifyAnswer(rec.g[k]); if (c) ans = c; }
   var viaMenu = false;
   if (!ans) { var a2 = classifyAnswer(rec.g.duvida_do_cliente); if (a2) { ans = a2; viaMenu = true; } }
   return { key: ans || 'sem', viaMenu: viaMenu };
@@ -346,7 +347,7 @@ function stats(list) {
   list.forEach(function (it) {
     s.out[it.out]++;
     if (it.retained) s.ret++; else s.ticket++;
-    if (it.out === 'nao' && it.retained) s.soft++;
+    if (it.out === 'nao' || it.out === 'sem') s.soft++;
     if (it.out === 'sim_encerrar' || it.out === 'sim_ajudou') { s.ans++; s.yes++; } else if (it.out === 'nao') s.ans++;
     var d = it.r.t.slice(0, 10);
     if (!s.from || d < s.from) s.from = d; if (!s.to || d > s.to) s.to = d;
@@ -400,28 +401,36 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
   function legend(st) {
     return '<div class="legend">' + OUTCOMES.map(function (o) { return '<span><i class="dot o-' + o.key + '"></i>' + esc(o.label) + ': <b>' + f0(st.n ? st.out[o.key] / st.n * 100 : 0) + '%</b></span>'; }).join('') + '</div>';
   }
-  function badgeFor(r) { return r >= 90 ? ['EXCELENTE', 'pos'] : r >= 80 ? ['BOM', 'pos'] : r >= 65 ? ['ATENÇÃO', 'warn'] : ['CRÍTICO', 'neg']; }
+  function badgeFor(st) { var r = st.ans >= 5 ? st.resolved : st.rate; return r >= 90 ? ['EXCELENTE', 'pos'] : r >= 80 ? ['BOM', 'pos'] : r >= 65 ? ['ATENÇÃO', 'warn'] : ['CRÍTICO', 'neg']; }
   /* ---------- foco (filtro ao clicar nos cards) ---------- */
-  function isSoft(it) { return it.out === 'nao' && it.retained; }
+  function isSoft(it) { return it.out === 'nao' || it.out === 'sem'; }
+  function isRes(it) { return it.out === 'sim_encerrar' || it.out === 'sim_ajudou'; }
   var FOC = {
-    ret: { label: 'Retenção no chat', noun: 'retidos', f: function (it) { return it.retained; }, inv: false },
-    ticket: { label: 'Tickets por e-mail', noun: 'tickets', f: function (it) { return !it.retained; }, inv: true },
-    soft: { label: 'Possível não retenção', noun: 'possíveis não retidos', f: isSoft, inv: true }
+    ret: { label: 'Retenção no chat', noun: 'retidos', one: 'retido', f: function (it) { return it.retained; }, inv: false },
+    res: { label: 'Resolvido no bot', noun: 'resolvidos', one: 'resolvido', f: isRes, inv: false },
+    ticket: { label: 'Tickets por e-mail', noun: 'tickets', one: 'ticket', f: function (it) { return !it.retained; }, inv: true },
+    soft: { label: 'Possível não retenção', noun: 'possíveis não retidos', one: 'possível não retido', f: isSoft, inv: true },
+    nao: { label: 'Disse que não ajudou e ficou', noun: 'que não ajudaram', one: 'que não ajudou', f: function (it) { return it.out === 'nao'; }, inv: true },
+    sem: { label: 'Sem avaliação final', noun: 'sem avaliação', one: 'sem avaliação', f: function (it) { return it.out === 'sem'; }, inv: true }
   };
+  function pct(x, n) { return n ? x / n * 100 : 0; }
   function sub(list) { return S.focus ? list.filter(FOC[S.focus].f) : list; }
   function share(list) { if (!list.length) return 0; return sub(S.focus ? list : list.filter(function (i) { return i.retained; })).length / list.length * 100; }
-  function nn(n) { var s = S.focus ? FOC[S.focus].noun : 'retidos'; if (n === 1) s = { retidos: 'retido', tickets: 'ticket', 'possíveis não retidos': 'possível não retido' }[s]; return n + ' ' + s; }
+  function nn(n) { var o = S.focus ? FOC[S.focus] : FOC.ret; return n + ' ' + (n === 1 ? o.one : o.noun); }
   function inv() { return !!(S.focus && FOC[S.focus].inv); }
   function good(v) { return inv() ? 100 - v : v; }
   function flab() { return S.focus ? FOC[S.focus].label : 'Retenção no chat'; }
-  function pillFor(it) { var o = OUT[it.out]; return '<span class="pill o-' + o.key + '">' + esc(o.short) + '</span>' + (isSoft(it) ? '<span class="pill soft" title="Terminou em “Não, preciso de ajuda” e não abriu ticket. Conta como retido, mas pode não ter resolvido.">Possível não retenção</span>' : ''); }
+  function pillFor(it) {
+    var o = OUT[it.out];
+    return '<span class="pill o-' + o.key + '">' + esc(o.short) + '</span>' + (isSoft(it) ? '<span class="pill soft" title="Não foi para o e-mail, mas não confirmou que o bot resolveu. Conta como retido, porém pode não ter ajudado.">Possível não retenção</span>' : '');
+  }
   function pp(d, rev) { var up = rev ? d < -0.05 : d > 0.05, dn = rev ? d > 0.05 : d < -0.05; return '<span class="pp ' + (up ? 'up' : dn ? 'dn' : 'eq') + '">' + (d > 0.05 ? '▲ +' : d < -0.05 ? '▼ ' : '= ') + f1(d) + ' pp</span>'; }
 
   /* ---------- seções ---------- */
   function secOverview() {
     var sel = S.A.rounds.filter(function (r) { return S.sel[r.id]; });
     var items = S.A.items.filter(function (it) { return S.sel[it.round]; });
-    var st = stats(items), bd = badgeFor(st.rate);
+    var st = stats(items), bd = badgeFor(st);
     var first = sel.length ? roundStats(sel[0].id) : null, last = sel.length ? roundStats(sel[sel.length - 1].id) : null;
     var trend = sel.length > 1 ? last.rate - first.rate : null;
     var filt = ['TU', 'TUC'].map(function (type) {
@@ -439,19 +448,25 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
     var inferred = S.A.items.filter(function (i) { return i.themeInferred; }).length;
     if (inferred) att += '<li><span>' + inferred + ' atendimento(s) têm o tema definido pelo texto da mensagem inicial (as variáveis de menu podem trazer valores de atendimentos anteriores).</span></li>';
     var sv = stats(sub(items)), tag = S.focus ? ' <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">só ' + esc(FOC[S.focus].label.toLowerCase()) + '</span>' : '';
-    var softPct = st.n ? st.soft / st.n * 100 : 0;
+    var softPct = st.n ? st.soft / st.n * 100 : 0, nRes = st.out.sim_encerrar + st.out.sim_ajudou;
     return '<section class="fade"><div class="sh"><div><h2>Visão geral</h2><p class="sub">Resumo consolidado de todos os atendimentos das rodadas selecionadas. Clique em um card para filtrar o restante da página.</p></div><span class="badge ' + bd[1] + '">' + bd[0] + '</span></div>' +
       '<div class="card filters" style="margin-bottom:14px">' + filt + '</div>' +
       '<div class="grid4">' +
       stat('Total de atendimentos', st.n, ic('users'), sel.length + ' rodada(s) · ' + Object.keys(testersNorm(items)).length + ' avaliadores', false, null, { k: '', on: !S.focus }) +
-      stat('Retenção no chat', f1(st.rate) + '%', ic('trend'), st.ret + ' de ' + st.n + ' sem abrir ticket', true, trend, { k: 'ret', on: S.focus === 'ret' }) +
+      stat('Retenção no chat', f1(st.rate) + '%', ic('trend'), st.ret + ' de ' + st.n + ' sem abrir ticket (não inclui confirmação)', true, trend, { k: 'ret', on: S.focus === 'ret' }) +
       stat('Tickets por e-mail', st.ticket, ic('mail'), f1(st.n ? st.ticket / st.n * 100 : 0) + '% dos atendimentos', false, null, { k: 'ticket', on: S.focus === 'ticket' }) +
       stat('Última rodada', last ? sel[sel.length - 1].id : '—', ic('flask'), last ? last.n + ' atend. · ' + f0(last.rate) + '% retidos' : '') +
       '</div>' +
-      '<div class="card clk soft-card' + (S.focus === 'soft' ? ' on' : '') + '" data-act="focus" data-k="soft" role="button" tabindex="0" style="margin-top:14px"><div><span class="pill soft">Possível não retenção</span> <b style="font-size:20px;margin-left:8px">' + st.soft + '</b> <span style="color:var(--muted)">atendimentos · ' + f1(softPct) + '%</span></div><p class="sub" style="margin:8px 0 0">Terminaram em "Não, preciso de ajuda" e não abriram ticket. Contam como retidos, mas podem não ter resolvido: por isso a retenção de ' + f1(st.rate) + '% pode estar otimista. Fora do cálculo; use como alerta. Clique para ver só esses.</p></div>' +
+      '<div class="grid4" style="margin-top:14px">' +
+      stat('Resolvido no bot', nRes, ic('chat'), f1(pct(nRes, st.n)) + '% dos atendimentos · respondeu "Sim"', false, null, { k: 'res', on: S.focus === 'res' }) +
+      stat('Disse que não ajudou e ficou', st.out.nao, ic('mail'), f1(pct(st.out.nao, st.n)) + '% · não foi para o e-mail', false, null, { k: 'nao', on: S.focus === 'nao' }) +
+      stat('Sem avaliação final', st.out.sem, ic('filter'), f1(pct(st.out.sem, st.n)) + '% · saiu ou não chegou à pergunta', false, null, { k: 'sem', on: S.focus === 'sem' }) +
+      stat('Avaliaram a resposta', st.ans, ic('users'), st.ans ? f1(st.resolved) + '% disseram que ajudou (' + st.yes + ' de ' + st.ans + ')' : 'ninguém avaliou ainda') +
+      '</div>' +
+      '<div class="card clk soft-card' + (S.focus === 'soft' ? ' on' : '') + '" data-act="focus" data-k="soft" role="button" tabindex="0" style="margin-top:14px"><div><span class="pill soft">Possível não retenção</span> <b style="font-size:20px;margin-left:8px">' + st.soft + '</b> <span style="color:var(--muted)">atendimentos · ' + f1(softPct) + '%</span></div><p class="sub" style="margin:8px 0 0">Somam quem <b>disse que não ajudou</b> (' + st.out.nao + ') e quem ficou <b>sem avaliação final</b> (' + st.out.sem + '). Nenhum foi para o e-mail, então contam como retidos, mas o bot não confirmou que resolveu. A retenção de ' + f1(st.rate) + '% mede só quem não abriu ticket; a <b>resolução confirmada</b> é de ' + f1(pct(nRes, st.n)) + '%. A realidade está entre as duas. Fora do cálculo; use como alerta. Clique para ver só esses.</p></div>' +
       '<div class="card" style="margin-top:14px"><h3>Desfecho dos atendimentos' + tag + '</h3>' + dist(sv, 18) + legend(sv) +
       (sv.ans ? '<p class="sub" style="margin-top:12px">Entre quem respondeu à pergunta "ajudou?", <b>' + f1(sv.resolved) + '%</b> disse que sim (' + sv.yes + ' de ' + sv.ans + ').</p>' : '') +
-      '<details class="how"><summary>Como a retenção é calculada</summary><p>Atendimento <b>retido</b> é o que terminou dentro do chat. Atendimento com <b>ticket</b> é o que preencheu a variável "Outras dúvidas" (coluna BP): o cliente descreveu a dúvida para ser atendido por e-mail e, por isso, não foi retido. "Não, preciso de ajuda" sozinho não conta como perda: se o cliente não foi para o e-mail, ele continua retido, mas recebe a marca <b>Possível não retenção</b>. A coluna "Retenção" da planilha não é usada.</p></details>' +
+      '<details class="how"><summary>Como a retenção é calculada</summary><p>Atendimento <b>retido</b> é o que terminou dentro do chat. Atendimento com <b>ticket</b> é o que preencheu a variável "Outras dúvidas" (coluna BP): o cliente descreveu a dúvida para ser atendido por e-mail e, por isso, não foi retido. Quem não foi para o e-mail continua retido, mas se disse que não ajudou ou saiu sem avaliar o atendimento recebe a marca <b>Possível não retenção</b>, e só conta como <b>resolvido</b> quem respondeu "Sim". A coluna "Retenção" da planilha não é usada.</p></details>' +
       (att ? '<details class="how"><summary>Pontos de atenção na base</summary><ul class="ul" style="margin-top:8px">' + att + '</ul></details>' : '') +
       '</div></section>';
   }
@@ -535,7 +550,7 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
       }).join('') + '</div></div>';
     }).join('');
     var rd = S.A.rounds.filter(function (r) { return r.id === S.tab; })[0] || S.A.rounds[0];
-    var items = itemsOfRound(rd.id), st = stats(items), bd = badgeFor(st.rate), sb = sub(items), sbs = stats(sb);
+    var items = itemsOfRound(rd.id), st = stats(items), bd = badgeFor(st), sb = sub(items), sbs = stats(sb);
     var m = {}; items.forEach(function (it) { (m[it.theme] = m[it.theme] || []).push(it); });
     var themes = Object.keys(m).filter(function (t) { return !S.focus || sub(m[t]).length; }).sort(function (a, b) { return (S.focus ? sub(m[b]).length - sub(m[a]).length : m[b].length - m[a].length); }).map(function (t) {
       var s = stats(m[t]), tn = tone(s.rate), ss = stats(sub(m[t]));
@@ -567,9 +582,9 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
       var a = S.cm.TU, b = S.cm.TUC; if (a || b) { if (!((a && it.round === a) || (b && it.round === b))) return false; }
       return it.msg || it.r.k;
     });
-    var f = { all: function () { return true; }, kept: function (it) { return it.retained; }, ticket: function (it) { return !it.retained; }, nao: isSoft };
+    var f = { all: function () { return true; }, res: isRes, soft: isSoft, nao: function (it) { return it.out === 'nao'; }, sem: function (it) { return it.out === 'sem'; }, ticket: function (it) { return !it.retained; } };
     var cnt = {}; Object.keys(f).forEach(function (k) { cnt[k] = base.filter(f[k]).length; });
-    var lab = { all: 'Todos', kept: 'Retidos', nao: 'Possível não retenção', ticket: 'Ticket por e-mail' };
+    var lab = { all: 'Todos', res: 'Resolvidos', soft: 'Possível não retenção', nao: 'Não ajudou e ficou', sem: 'Sem avaliação final', ticket: 'Ticket por e-mail' };
     var chips = Object.keys(lab).map(function (k) { return '<button class="chip ' + (S.cm.out === k ? 'on' : '') + '" data-act="cmOut" data-k="' + k + '" type="button">' + lab[k] + '<small>(' + cnt[k] + ')</small></button>'; }).join('');
     var list = base.filter(f[S.cm.out]).sort(function (a, b) { return a.r.t < b.r.t ? 1 : -1; });
     var shown = list.slice(0, S.cm.limit);
