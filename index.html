@@ -526,8 +526,8 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
       '<p class="steplab"><span>1</span>Resultado geral: quantos ficaram no bot e quantos foram para o e-mail</p>' +
       '<div class="grid4">' +
       stat('Total de atendimentos', st.n, ic('users'), Object.keys(testersNorm(items)).length + ' avaliadores · ' + scopeDays().length + ' dia(s) de teste', false, null, { k: '', on: !S.focus }) +
+      stat('Tickets por e-mail', f1(pct(st.ticket, st.n)) + '%', ic('mail'), st.ticket + ' de ' + st.n + ' foram para o e-mail: não retidos', false, null, { k: 'ticket', on: S.focus === 'ticket' }) +
       stat('Possível retenção', f1(st.rate) + '%', ic('trend'), kept + ' de ' + st.n + ' ficaram no bot (não abriram ticket). Número bruto, não confirma ajuda', false, null, { k: 'ret', on: S.focus === 'ret' }) +
-      stat('Tickets por e-mail', st.ticket, ic('mail'), f1(pct(st.ticket, st.n)) + '% foram para o e-mail: não retidos', false, null, { k: 'ticket', on: S.focus === 'ticket' }) +
       stat('Retenção confirmada', f1(pct(nRes, st.n)) + '%', ic('chat'), nRes + ' de ' + st.n + ' disseram "Sim". É o número oficial de quem foi ajudado', true, null, { k: 'res', on: S.focus === 'res' }) +
       '</div>' +
       '<p class="steplab"><span>2</span>Dos ' + kept + ' que ficaram no bot: o cliente foi ajudado?</p>' +
