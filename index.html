@@ -107,8 +107,8 @@ svg text{fill:var(--muted);font-family:var(--text);font-size:12px}
 .rtab small.p{color:var(--pos)} .rtab small.w{color:var(--warn)} .rtab small.n{color:var(--neg)}
 .rhead{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
 .rhead h3{font-size:38px}
-.themes .th{display:grid;gap:8px;background:var(--soft);border-radius:10px;padding:12px 14px;text-align:left;border:0;width:100%}
-.themes .th:hover{background:var(--soft2)}
+.th{display:grid;gap:8px;background:var(--soft);border-radius:10px;padding:12px 14px;text-align:left;border:0;width:100%}
+.th:hover{background:var(--soft2)}
 .th .l1{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
 .th .l1 b{font-weight:600}
 .th .l1 span{font-size:13px;font-weight:600}
@@ -154,6 +154,27 @@ input[type=text],select{font:inherit;color:var(--ink);background:var(--card);bor
 .tlday{position:relative}.tlday:before{content:"";position:absolute;left:-23px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 3px var(--card)}
 .tlh{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
 .tlit{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;align-items:start;margin-bottom:8px}.tlt{font-size:12px;color:var(--muted);padding-top:12px;font-variant-numeric:tabular-nums}
+
+.story{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin-bottom:18px}
+.story .stp{flex:1 1 170px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:2px;align-content:start}
+.story .stp b{font-family:var(--disp);font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.story .stp span{font-size:13px;color:var(--muted);line-height:1.3}
+.story .stp.neg{border-color:var(--neg)}.story .stp.neg b{color:var(--neg)}.story .stp.ok{border-color:var(--pos)}.story .stp.ok b{color:var(--pos)}
+.story .arr{align-self:center;color:var(--muted);font-style:normal;font-size:20px}
+.steplab{display:flex;gap:10px;align-items:center;margin:22px 0 10px;font-weight:600;font-size:15px}
+.steplab span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;font-size:13px}
+.chipk{font-size:12px;font-weight:600;border-radius:99px;padding:2px 10px}.chipk.neg{background:var(--neg-bg);color:var(--neg)}.chipk.ok{background:var(--pos-bg);color:var(--pos)}
+.th .l2{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}.th .l2 b{color:var(--ink)}.th .l2 .rt{margin-left:auto;font-weight:600;color:var(--ink)}
+.th .l1 b .go{color:var(--muted);font-weight:400}
+.th{cursor:pointer}.th:hover{background:var(--soft2)}
+.atts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:0 0 14px}
+.att{background:var(--soft);border-radius:10px;padding:11px 14px;display:grid;gap:3px;border-left:4px solid var(--line)}
+.att.neg{border-left-color:var(--neg)}.att.warn{border-left-color:var(--warn)}.att.ok{border-left-color:var(--pos)}
+.att b{font-size:16px}.att span:last-child{font-size:12.5px;color:var(--muted)}
+.rc .rn small{font-family:var(--text);font-size:12px;font-weight:500;color:var(--muted);text-transform:none;letter-spacing:0}
+.rc .rs{line-height:1.6}.rc .rs b{color:var(--ink)}.rc .dist{margin:8px 0}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:10px}.dgrid label{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:13px}
+.dgrid select,.f select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 @media (max-width:560px){.top h1{font-size:24px}section h2{font-size:28px}.stat .val{font-size:46px}.flab{min-width:100%}}
 @media (prefers-reduced-motion:no-preference){.fade{animation:fd .35s ease-out}@keyframes fd{from{opacity:.0;transform:translateY(6px)}to{opacity:1;transform:none}}}
 </style>
@@ -161,7 +182,7 @@ input[type=text],select{font:inherit;color:var(--ink);background:var(--card);bor
 <body>
 
 <div class="top"><div class="wrap">
-  <div class="brand"><div class="mark" aria-hidden="true">P</div><div><h1>Projeto Puma Assistente Virtual</h1><p>Atendimento do bot no HiBot · retenção, temas e mensagens por rodada de teste</p></div></div>
+  <div class="brand"><div class="mark" aria-hidden="true">P</div><div><h1>Projeto Puma Assistente Virtual</h1><p>Atendimento do bot no HiBot · retenção, temas e mensagens por data de teste</p></div></div>
   <div class="top-r"><span class="date" id="today"></span><button class="btn dark" id="btnBase" data-act="openBase" type="button">Atualizar base</button></div>
 </div></div>
 <div class="wrap">
@@ -323,22 +344,22 @@ function periodKey(iso, mode) {
   return iso.slice(0, 10);
 }
 
+function testOf(day, cfg) {
+  var m = (cfg && cfg.testMap) || {};
+  return String(m[day] || (cfg && cfg.defaultTest) || 'TU1').toUpperCase();
+}
+function testNum(id) { var m = /(\d+)$/.exec(id); return m ? +m[1] : 0; }
 function analyze(records, cfg) {
   cfg = cfg || {};
-  var mode = cfg.groupBy || 'day';
   var items = records.map(function (r) {
-    var o = outcomeOf(r, cfg), th = themeOf(r);
-    return { r: r, type: isTUC(r, cfg) ? 'TUC' : 'TU', pk: periodKey(r.t, mode), theme: th.t, themeInferred: th.inferred, out: o.key, via: o.via, viaMenu: o.viaMenu, msg: msgOf(r), retained: o.key !== 'ticket' };
+    var o = outcomeOf(r, cfg), th = themeOf(r), day = r.t.slice(0, 10), test = testOf(day, cfg);
+    return { r: r, day: day, round: test, type: /^TUC/.test(test) ? 'TUC' : 'TU', theme: th.t, themeInferred: th.inferred, out: o.key, via: o.via, viaMenu: o.viaMenu, msg: msgOf(r), retained: o.key !== 'ticket' };
   });
-  var rounds = [];
-  ['TU', 'TUC'].forEach(function (type) {
-    var keys = {};
-    items.forEach(function (it) { if (it.type === type) keys[it.pk] = true; });
-    Object.keys(keys).sort().forEach(function (pk, i) { rounds.push({ id: type + (i + 1), type: type, n: i + 1, pk: pk }); });
-  });
-  var byPk = {}; rounds.forEach(function (rd) { byPk[rd.type + '|' + rd.pk] = rd.id; });
-  items.forEach(function (it) { it.round = byPk[it.type + '|' + it.pk]; });
-  return { items: items, rounds: rounds };
+  var tests = {}, days = {};
+  items.forEach(function (it) { tests[it.round] = it.type; days[it.day] = true; });
+  var rounds = Object.keys(tests).map(function (id) { return { id: id, type: tests[id], n: testNum(id) }; }).sort(function (a, b) { return (a.type === b.type ? 0 : a.type === 'TU' ? -1 : 1) || a.n - b.n; });
+  rounds.forEach(function (rd) { var d = {}; items.forEach(function (it) { if (it.round === rd.id) d[it.day] = true; }); rd.days = Object.keys(d).sort(); });
+  return { items: items, rounds: rounds, days: Object.keys(days).sort() };
 }
 
 function stats(list) {
@@ -357,11 +378,11 @@ function stats(list) {
   s.resolved = s.ans ? s.yes / s.ans * 100 : null;
   return s;
 }
-if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: tableToRecords, analyze: analyze, stats: stats, OUTCOMES: OUTCOMES, THEME_ORDER: THEME_ORDER, msgOf: msgOf };
+if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, tableToRecords: tableToRecords, analyze: analyze, stats: stats, OUTCOMES: OUTCOMES, THEME_ORDER: THEME_ORDER, msgOf: msgOf };
 /* ===== Aplicação ===== */
 (function () {
-  var S = { records: [], meta: null, cfg: { tucKeywords: ['puma'], groupBy: 'day', emailContinue: false }, A: { items: [], rounds: [] },
-    sel: {}, tab: null, cm: { TU: null, TUC: null, out: 'all', limit: 40 }, db: null, canWrite: true, status: 'loading', pending: null, busy: '', baseTab: 'base', note: null, openFile: null, focus: null, static: false };
+  var S = { records: [], meta: null, cfg: { defaultTest: 'TU1', testMap: {}, emailContinue: false }, A: { items: [], rounds: [] },
+    sel: {}, tab: 'all', pendTest: 'TU1', pendMap: {}, cm: { day: null, out: 'all', limit: 40 }, db: null, canWrite: true, status: 'loading', pending: null, busy: '', baseTab: 'base', note: null, openFile: null, focus: null, static: false };
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var f1 = function (v) { return (Math.round(v * 10) / 10).toFixed(1).replace('.', ','); };
@@ -387,10 +408,13 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
     var ids = S.A.rounds.map(function (r) { return r.id; });
     if (resetSel || !Object.keys(S.sel).length) { S.sel = {}; ids.forEach(function (id) { S.sel[id] = true; }); }
     else { var ns = {}; ids.forEach(function (id) { ns[id] = S.sel[id] !== false; }); S.sel = ns; }
-    if (ids.indexOf(S.tab) < 0) S.tab = ids[ids.length - 1] || null;
-    if (S.cm.TU && ids.indexOf(S.cm.TU) < 0) S.cm.TU = null;
-    if (S.cm.TUC && ids.indexOf(S.cm.TUC) < 0) S.cm.TUC = null;
+    if (S.tab !== 'all' && S.A.days.indexOf(S.tab) < 0) S.tab = 'all';
+    if (S.cm.day && S.A.days.indexOf(S.cm.day) < 0) S.cm.day = null;
   }
+  var TEST_OPTS = ['TU1', 'TU2', 'TU3', 'TU4', 'TU5', 'TU6', 'TUC1', 'TUC2', 'TUC3', 'TUC4'];
+  function normCfg(c) { c = c || {}; return { defaultTest: String(c.defaultTest || 'TU1').toUpperCase(), testMap: c.testMap || {}, emailContinue: !!c.emailContinue }; }
+  function testSel(attrs, val) { var o = TEST_OPTS.slice(); if (o.indexOf(val) < 0) o.push(val); return '<select ' + attrs + '>' + o.map(function (t) { return '<option value="' + t + '"' + (t === val ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>'; }
+  function recDays(recs) { var m = {}; recs.forEach(function (r) { m[r.t.slice(0, 10)] = 1; }); return Object.keys(m).sort(); }
   function roundsOf(type) { return S.A.rounds.filter(function (r) { return r.type === type; }); }
   function itemsOfRound(id) { return S.A.items.filter(function (it) { return it.round === id; }); }
   function roundStats(id) { return stats(itemsOfRound(id)); }
@@ -426,18 +450,61 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
   }
   function pp(d, rev) { var up = rev ? d < -0.05 : d > 0.05, dn = rev ? d > 0.05 : d < -0.05; return '<span class="pp ' + (up ? 'up' : dn ? 'dn' : 'eq') + '">' + (d > 0.05 ? '▲ +' : d < -0.05 ? '▼ ' : '= ') + f1(d) + ' pp</span>'; }
 
+  /* ---------- helpers de escopo e datas ---------- */
+  var WD = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+  function dm(d) { return d.slice(8, 10) + '/' + d.slice(5, 7); }
+  function wd(d) { return WD[new Date(d + 'T12:00:00').getDay()]; }
+  function SC() { return S.A.items.filter(function (it) { return S.sel[it.round]; }); }
+  function scopeDays() { var m = {}; SC().forEach(function (it) { m[it.day] = 1; }); return Object.keys(m).sort(); }
+  function curItems() { var l = SC(); return S.tab && S.tab !== 'all' ? l.filter(function (it) { return it.day === S.tab; }) : l; }
+  function testsTxt() { return S.A.rounds.filter(function (r) { return S.sel[r.id]; }).map(function (r) { return r.id; }).join(', '); }
+  function periodTxt(st) { return st.from ? fd(st.from) + (st.to !== st.from ? ' a ' + fd(st.to) : '') : ''; }
+  function groupBy(list, key) { var m = {}; list.forEach(function (it) { var k = typeof key === 'function' ? key(it) : it[key]; (m[k] = m[k] || []).push(it); }); return m; }
+
+  /* ---------- blocos por tema ---------- */
+  function themeLegend() { return '<div class="legend" style="margin:0 0 10px">' + OUTCOMES.map(function (o) { return '<span><i class="dot o-' + o.key + '"></i>' + esc(o.label) + '</span>'; }).join('') + '</div>'; }
+  function themeBlock(list, act) {
+    var g = groupBy(list, 'theme');
+    var keys = Object.keys(g).filter(function (t) { return !S.focus || sub(g[t]).length; });
+    keys.sort(function (a, b) {
+      var sa = stats(g[a]), sb2 = stats(g[b]);
+      if (S.focus) return sub(g[b]).length - sub(g[a]).length;
+      return (sb2.ticket - sa.ticket) || (sb2.soft - sa.soft) || (sb2.n - sa.n);
+    });
+    if (!keys.length) return '<p class="sub">Nenhum atendimento neste filtro.</p>';
+    return themeLegend() + '<div class="rows">' + keys.map(function (t) {
+      var l = g[t], s = stats(l), ss = S.focus ? stats(sub(l)) : s, n = s.n, res = s.out.sim_encerrar + s.out.sim_ajudou;
+      var chip = s.ticket ? '<span class="chipk neg">' + s.ticket + (s.ticket === 1 ? ' ticket por e-mail' : ' tickets por e-mail') + '</span>' : '<span class="chipk ok">sem tickets</span>';
+      var head = S.focus ? nn(ss.n) + ' de ' + n + ' atend.' : n + (n === 1 ? ' atendimento' : ' atendimentos');
+      return '<button class="th" data-act="' + act + '" data-t="' + esc(t) + '" type="button"><div class="l1"><b>' + esc(t) + ' <span class="go">›</span></b><span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span style="color:var(--muted)">' + head + '</span>' + chip + '</span></div>' + dist(ss, 9) +
+        '<div class="l2"><span><i class="dot o-sim_ajudou"></i><b>' + res + '</b> resolvido</span><span><i class="dot o-nao"></i><b>' + s.out.nao + '</b> não ajudou</span><span><i class="dot o-sem"></i><b>' + s.out.sem + '</b> sem avaliação</span><span><i class="dot o-ticket"></i><b>' + s.ticket + '</b> ticket</span><span class="rt">' + f0(s.rate) + '% ficaram no bot</span></div></button>';
+    }).join('') + '</div>';
+  }
+  function attention(list) {
+    var g = groupBy(list, 'theme'), arr = Object.keys(g).map(function (t) { var s = stats(g[t]); return { t: t, s: s, res: s.out.sim_encerrar + s.out.sim_ajudou }; });
+    if (!arr.length) return '';
+    var byT = arr.slice().sort(function (a, b) { return b.s.ticket - a.s.ticket || b.s.n - a.s.n; })[0];
+    var byS = arr.slice().sort(function (a, b) { return b.s.soft - a.s.soft || b.s.n - a.s.n; })[0];
+    var solid = arr.filter(function (x) { return x.s.n >= 3; });
+    var worst = solid.slice().sort(function (a, b) { return a.res / a.s.n - b.res / b.s.n; })[0], best = solid.slice().sort(function (a, b) { return b.res / b.s.n - a.res / a.s.n; })[0];
+    var c = function (cls, lab, tt, sb2) { return '<div class="att ' + cls + '"><span class="eyebrow">' + lab + '</span><b>' + esc(tt) + '</b><span>' + sb2 + '</span></div>'; };
+    return '<div class="atts">' +
+      (byT.s.ticket ? c('neg', 'Mais foi para o e-mail', byT.t, byT.s.ticket + ' de ' + byT.s.n + ' atendimentos (' + f0(pct(byT.s.ticket, byT.s.n)) + '%)') : c('ok', 'Tickets por e-mail', 'Nenhum', 'ninguém abriu ticket neste recorte')) +
+      c('warn', 'Mais possível não retenção', byS.t, byS.s.soft + ' de ' + byS.s.n + ' não ajudou ou sem avaliação (' + f0(pct(byS.s.soft, byS.s.n)) + '%)') +
+      (worst ? c('neg', 'Menor resolução confirmada', worst.t, worst.res + ' de ' + worst.s.n + ' resolvidos (' + f0(pct(worst.res, worst.s.n)) + '%)') : '') +
+      (best && best !== worst ? c('ok', 'Maior resolução confirmada', best.t, best.res + ' de ' + best.s.n + ' resolvidos (' + f0(pct(best.res, best.s.n)) + '%)') : '') + '</div>';
+  }
+
   /* ---------- seções ---------- */
   function secOverview() {
     var sel = S.A.rounds.filter(function (r) { return S.sel[r.id]; });
-    var items = S.A.items.filter(function (it) { return S.sel[it.round]; });
-    var st = stats(items), bd = badgeFor(st);
-    var first = sel.length ? roundStats(sel[0].id) : null, last = sel.length ? roundStats(sel[sel.length - 1].id) : null;
-    var trend = sel.length > 1 ? last.rate - first.rate : null;
+    var items = SC(), st = stats(items), bd = badgeFor(st);
+    var nRes = st.out.sim_encerrar + st.out.sim_ajudou, kept = st.n - st.ticket;
     var filt = ['TU', 'TUC'].map(function (type) {
       var rs = roundsOf(type); if (!rs.length) return '';
       var all = rs.every(function (r) { return S.sel[r.id]; });
-      return '<div class="frow"><div class="flab">' + ic(type === 'TUC' ? 'team' : 'flask', 16) + '<span>Rodada ' + type + ':</span></div><div class="chips">' +
-        '<button class="chip ' + (all ? 'on' : '') + '" data-act="selAll" data-type="' + type + '" type="button">Todas</button>' +
+      return '<div class="frow"><div class="flab">' + ic(type === 'TUC' ? 'team' : 'flask', 16) + '<span>Teste ' + type + ':</span></div><div class="chips">' +
+        '<button class="chip ' + (all ? 'on' : '') + '" data-act="selAll" data-type="' + type + '" type="button">Todos</button>' +
         rs.map(function (r) { return '<button class="chip ' + (S.sel[r.id] ? (all ? 'sub-on' : 'on') : '') + '" data-act="selToggle" data-id="' + r.id + '" type="button">' + r.id + '</button>'; }).join('') + '</div></div>';
     }).join('');
     var contNoTk = S.A.items.filter(function (i) { return /continuar por e-?mail/i.test(i.r.g.duvida_do_cliente || '') && !i.r.k; }).length;
@@ -448,40 +515,47 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
     var inferred = S.A.items.filter(function (i) { return i.themeInferred; }).length;
     if (inferred) att += '<li><span>' + inferred + ' atendimento(s) têm o tema definido pelo texto da mensagem inicial (as variáveis de menu podem trazer valores de atendimentos anteriores).</span></li>';
     var sv = stats(sub(items)), tag = S.focus ? ' <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">só ' + esc(FOC[S.focus].label.toLowerCase()) + '</span>' : '';
-    var softPct = st.n ? st.soft / st.n * 100 : 0, nRes = st.out.sim_encerrar + st.out.sim_ajudou;
-    return '<section class="fade"><div class="sh"><div><h2>Visão geral</h2><p class="sub">Resumo consolidado de todos os atendimentos das rodadas selecionadas. Clique em um card para filtrar o restante da página.</p></div><span class="badge ' + bd[1] + '">' + bd[0] + '</span></div>' +
-      '<div class="card filters" style="margin-bottom:14px">' + filt + '</div>' +
+    var softPct = pct(st.soft, st.n);
+    var story = '<div class="story">' +
+      '<div class="stp"><b>' + st.n + '</b><span>atendimentos no total</span></div><i class="arr">→</i>' +
+      '<div class="stp neg"><b>' + st.ticket + '</b><span>foram para o e-mail (' + f1(pct(st.ticket, st.n)) + '%)</span></div><i class="arr">→</i>' +
+      '<div class="stp"><b>' + kept + '</b><span>ficaram no bot: retenção original (' + f1(st.rate) + '%)</span></div><i class="arr">→</i>' +
+      '<div class="stp ok"><b>' + nRes + '</b><span>confirmaram que foram ajudados: retenção confirmada (' + f1(pct(nRes, st.n)) + '%)</span></div></div>';
+    return '<section class="fade"><div class="sh"><div><h2>Visão geral · ' + esc(testsTxt()) + '</h2><p class="sub">Período ' + periodTxt(st) + '. Clique em um card para filtrar o restante da página.</p></div><span class="badge ' + bd[1] + '" title="Calculado pela avaliação dos clientes (quem respondeu se o bot ajudou)">' + bd[0] + '</span></div>' +
+      '<div class="card filters" style="margin-bottom:14px">' + filt + '</div>' + story +
+      '<p class="steplab"><span>1</span>Resultado geral: quantos ficaram no bot e quantos foram para o e-mail</p>' +
       '<div class="grid4">' +
-      stat('Total de atendimentos', st.n, ic('users'), sel.length + ' rodada(s) · ' + Object.keys(testersNorm(items)).length + ' avaliadores', false, null, { k: '', on: !S.focus }) +
-      stat('Retenção no chat', f1(st.rate) + '%', ic('trend'), st.ret + ' de ' + st.n + ' sem abrir ticket (não inclui confirmação)', true, trend, { k: 'ret', on: S.focus === 'ret' }) +
-      stat('Tickets por e-mail', st.ticket, ic('mail'), f1(st.n ? st.ticket / st.n * 100 : 0) + '% dos atendimentos', false, null, { k: 'ticket', on: S.focus === 'ticket' }) +
-      stat('Última rodada', last ? sel[sel.length - 1].id : '—', ic('flask'), last ? last.n + ' atend. · ' + f0(last.rate) + '% retidos' : '') +
+      stat('Total de atendimentos', st.n, ic('users'), Object.keys(testersNorm(items)).length + ' avaliadores · ' + scopeDays().length + ' dia(s) de teste', false, null, { k: '', on: !S.focus }) +
+      stat('Retenção original', f1(st.rate) + '%', ic('trend'), kept + ' de ' + st.n + ' ficaram no bot (não abriram ticket). Número bruto, não confirma ajuda', false, null, { k: 'ret', on: S.focus === 'ret' }) +
+      stat('Tickets por e-mail', st.ticket, ic('mail'), f1(pct(st.ticket, st.n)) + '% foram para o e-mail: não retidos', false, null, { k: 'ticket', on: S.focus === 'ticket' }) +
+      stat('Retenção confirmada', f1(pct(nRes, st.n)) + '%', ic('chat'), nRes + ' de ' + st.n + ' disseram "Sim". É o número oficial de quem foi ajudado', true, null, { k: 'res', on: S.focus === 'res' }) +
       '</div>' +
-      '<div class="grid4" style="margin-top:14px">' +
-      stat('Resolvido no bot', nRes, ic('chat'), f1(pct(nRes, st.n)) + '% dos atendimentos · respondeu "Sim"', false, null, { k: 'res', on: S.focus === 'res' }) +
+      '<p class="steplab"><span>2</span>Dos ' + kept + ' que ficaram no bot: o cliente foi ajudado?</p>' +
+      '<div class="grid4">' +
+      stat('Resolvido no bot', nRes, ic('chat'), f1(pct(nRes, st.n)) + '% do total · respondeu "Sim"', false, null, { k: 'res', on: S.focus === 'res' }) +
       stat('Disse que não ajudou e ficou', st.out.nao, ic('mail'), f1(pct(st.out.nao, st.n)) + '% · não foi para o e-mail', false, null, { k: 'nao', on: S.focus === 'nao' }) +
       stat('Sem avaliação final', st.out.sem, ic('filter'), f1(pct(st.out.sem, st.n)) + '% · saiu ou não chegou à pergunta', false, null, { k: 'sem', on: S.focus === 'sem' }) +
       stat('Avaliaram a resposta', st.ans, ic('users'), st.ans ? f1(st.resolved) + '% disseram que ajudou (' + st.yes + ' de ' + st.ans + ')' : 'ninguém avaliou ainda') +
       '</div>' +
-      '<div class="card clk soft-card' + (S.focus === 'soft' ? ' on' : '') + '" data-act="focus" data-k="soft" role="button" tabindex="0" style="margin-top:14px"><div><span class="pill soft">Possível não retenção</span> <b style="font-size:20px;margin-left:8px">' + st.soft + '</b> <span style="color:var(--muted)">atendimentos · ' + f1(softPct) + '%</span></div><p class="sub" style="margin:8px 0 0">Somam quem <b>disse que não ajudou</b> (' + st.out.nao + ') e quem ficou <b>sem avaliação final</b> (' + st.out.sem + '). Nenhum foi para o e-mail, então contam como retidos, mas o bot não confirmou que resolveu. A retenção de ' + f1(st.rate) + '% mede só quem não abriu ticket; a <b>resolução confirmada</b> é de ' + f1(pct(nRes, st.n)) + '%. A realidade está entre as duas. Fora do cálculo; use como alerta. Clique para ver só esses.</p></div>' +
+      '<div class="card clk soft-card' + (S.focus === 'soft' ? ' on' : '') + '" data-act="focus" data-k="soft" role="button" tabindex="0" style="margin-top:14px"><div><span class="pill soft">Possível não retenção</span> <b style="font-size:20px;margin-left:8px">' + st.soft + '</b> <span style="color:var(--muted)">atendimentos · ' + f1(softPct) + '%</span></div><p class="sub" style="margin:8px 0 0">É a soma de quem <b>disse que não ajudou</b> (' + st.out.nao + ') com quem ficou <b>sem avaliação final</b> (' + st.out.sem + '). Nenhum abriu ticket, então a retenção original os conta como retidos, mas o bot não confirmou que resolveu. A verdade fica entre a retenção confirmada (' + f1(pct(nRes, st.n)) + '%) e a original (' + f1(st.rate) + '%). Fora do cálculo; use como alerta. Clique para ver só esses.</p></div>' +
       '<div class="card" style="margin-top:14px"><h3>Desfecho dos atendimentos' + tag + '</h3>' + dist(sv, 18) + legend(sv) +
       (sv.ans ? '<p class="sub" style="margin-top:12px">Entre quem respondeu à pergunta "ajudou?", <b>' + f1(sv.resolved) + '%</b> disse que sim (' + sv.yes + ' de ' + sv.ans + ').</p>' : '') +
-      '<details class="how"><summary>Como a retenção é calculada</summary><p>Atendimento <b>retido</b> é o que terminou dentro do chat. Atendimento com <b>ticket</b> é o que preencheu a variável "Outras dúvidas" (coluna BP): o cliente descreveu a dúvida para ser atendido por e-mail e, por isso, não foi retido. Quem não foi para o e-mail continua retido, mas se disse que não ajudou ou saiu sem avaliar o atendimento recebe a marca <b>Possível não retenção</b>, e só conta como <b>resolvido</b> quem respondeu "Sim". A coluna "Retenção" da planilha não é usada.</p></details>' +
+      '<details class="how"><summary>Como cada número é calculado</summary><p><b>Retenção original:</b> atendimentos que não foram para o e-mail (variável "Outras dúvidas", coluna BP, vazia). <b>Ticket:</b> o cliente preencheu "Outras dúvidas" e foi para o e-mail, então não foi retido. <b>Retenção confirmada (oficial):</b> atendimentos em que o cliente respondeu "Sim" à pergunta de ajuda, sobre o total. <b>Possível não retenção:</b> ficou no bot, mas disse que não ajudou ou saiu sem avaliar. A coluna "Retenção" da planilha não é usada.</p></details>' +
       (att ? '<details class="how"><summary>Pontos de atenção na base</summary><ul class="ul" style="margin-top:8px">' + att + '</ul></details>' : '') +
       '</div></section>';
   }
   function stat(lab, val, icon, sub2, hl, trend, clk) {
     return '<div class="card stat' + (hl ? ' hl' : '') + (clk ? ' clk' + (clk.on ? ' on' : '') : '') + '"' + (clk ? ' data-act="focus" data-k="' + clk.k + '" role="button" tabindex="0"' : '') + '><span class="ic">' + icon + '</span><div class="lab">' + esc(lab) + '</div><div class="val">' + esc(val) + '</div><div class="ss">' + esc(sub2) + '</div>' +
-      (trend != null ? '<span class="trend ' + (trend >= 0 ? 'up' : 'dn') + '">' + (trend >= 0 ? '▲ +' : '▼ ') + f1(trend) + ' pp vs. primeira rodada</span>' : '') + '</div>';
+      (trend != null ? '<span class="trend ' + (trend >= 0 ? 'up' : 'dn') + '">' + (trend >= 0 ? '▲ +' : '▼ ') + f1(trend) + ' pp</span>' : '') + '</div>';
   }
   function testersNorm(items) { var m = {}; items.forEach(function (it) { var k = it.r.n.trim().toLowerCase(); (m[k] = m[k] || []).push(it); }); return m; }
 
   function chart(rs) {
-    var W = 760, H = rs.length === 1 ? 210 : 270, pl = 46, pr = 18, pt = 26, pb = 40, vals = rs.map(function (r) { return r.v; });
+    var W = 760, H = rs.length === 1 ? 230 : 290, pl = 46, pr = 30, pt = 26, pb = 54, vals = rs.map(function (r) { return r.v; });
     var lo, hi;
     if (inv()) { lo = 0; hi = Math.max(20, Math.ceil(Math.max.apply(null, vals) * 1.4 / 20) * 20); }
     else { lo = Math.max(0, Math.floor((Math.min.apply(null, vals) - 10) / 10) * 10); hi = 100; }
-    var X = function (i) { return rs.length === 1 ? (pl + (W - pr)) / 2 : pl + i * ((W - pl - pr) / (rs.length - 1)); };
+    var X = function (i) { return rs.length === 1 ? (pl + (W - pr)) / 2 : pl + 20 + i * ((W - pl - pr - 40) / (rs.length - 1)); };
     var Y = function (v) { return pt + (hi - v) / (hi - lo) * (H - pt - pb); };
     var g = '', step = (hi - lo) / 4;
     for (var k = 0; k <= 4; k++) { var v = lo + step * k; g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" style="stroke:var(--line)" stroke-dasharray="3 4"/><text x="' + (pl - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + (step % 1 ? f1(v) : f0(v)) + '%</text>'; }
@@ -489,99 +563,65 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
     var area = rs.length > 1 ? '<polygon points="' + X(0) + ',' + Y(lo) + ' ' + pts + ' ' + X(rs.length - 1) + ',' + Y(lo) + '" style="fill:var(--ink)" opacity=".06"/><polyline points="' + pts + '" fill="none" style="stroke:var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>' : '';
     var dots = rs.map(function (r, i) {
       var c = r.st.rate >= 90 ? 'var(--pos)' : r.st.rate >= 75 ? 'var(--warn)' : 'var(--neg)', last = i === rs.length - 1;
-      return '<circle cx="' + X(i) + '" cy="' + Y(r.v) + '" r="' + (last ? 7 : 5) + '" style="fill:' + c + ';stroke:var(--card)" stroke-width="2"/><text x="' + X(i) + '" y="' + (Y(r.v) - 12) + '" text-anchor="middle" style="fill:var(--ink);font-weight:600">' + f1(r.v) + '%</text><text x="' + X(i) + '" y="' + (H - 14) + '" text-anchor="middle" style="fill:var(--ink);font-weight:600">' + r.id + '</text>';
+      return '<circle cx="' + X(i) + '" cy="' + Y(r.v) + '" r="' + (last ? 7 : 5) + '" style="fill:' + c + ';stroke:var(--card)" stroke-width="2"/><text x="' + X(i) + '" y="' + (Y(r.v) - 12) + '" text-anchor="middle" style="fill:var(--ink);font-weight:600">' + f1(r.v) + '%</text><text x="' + X(i) + '" y="' + (H - 28) + '" text-anchor="middle" style="fill:var(--ink);font-weight:600">' + dm(r.d) + '</text><text x="' + X(i) + '" y="' + (H - 12) + '" text-anchor="middle">' + wd(r.d) + ' · ' + r.tests + '</text>';
     }).join('');
-    var div = '';
-    for (var j = 1; j < rs.length; j++) if (rs[j].type !== rs[j - 1].type) { var xm = (X(j) + X(j - 1)) / 2; div = '<line x1="' + xm + '" x2="' + xm + '" y1="' + pt + '" y2="' + (H - pb) + '" style="stroke:var(--line)"/><text x="' + (xm + 6) + '" y="' + (pt + 10) + '">TUC</text><text x="' + (xm - 6) + '" y="' + (pt + 10) + '" text-anchor="end">TU</text>'; }
-    return '<div class="chartwrap"><svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="min-width:420px;max-width:100%" role="img" aria-label="' + esc(flab()) + ' por rodada de teste">' + g + div + area + dots + '</svg></div>';
+    return '<div class="chartwrap"><svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="min-width:420px;max-width:100%" role="img" aria-label="' + esc(flab()) + ' por dia de teste">' + g + area + dots + '</svg></div>';
   }
   function secEvolution() {
-    var rs = S.A.rounds.map(function (r) { var l = itemsOfRound(r.id); return { id: r.id, type: r.type, st: stats(l), v: share(l), sn: sub(l).length }; });
-    if (!rs.length) return '';
-    var fr = rs[0], lr = rs[rs.length - 1], ev = lr.v - fr.v, rev = inv(), noun = S.focus ? FOC[S.focus].noun : 'retidos';
+    var all = SC(); if (!all.length) return '';
+    var byDay = groupBy(all, 'day');
+    var rs = Object.keys(byDay).sort().map(function (d) { var l = byDay[d], t = {}; l.forEach(function (it) { t[it.round] = 1; }); return { d: d, l: l, st: stats(l), v: share(l), sn: sub(l).length, tests: Object.keys(t).join('+') }; });
+    var fr = rs[0], lr = rs[rs.length - 1], ev = lr.v - fr.v, rev = inv(), L = flab(), tt = testsTxt(), tst = stats(all);
     var cards = rs.map(function (r, i) {
-      var prev = i ? rs[i - 1].v : null;
-      return '<div class="rc"><div class="rn">' + r.id.replace(/(\d+)$/, '<span>$1</span>') + (prev != null ? ' ' + pp(r.v - prev, rev) : '') + '</div><div class="rv">' + f1(r.v) + '%</div><div class="rs">' + (S.focus ? nn(r.sn) + ' de ' + r.st.n + ' atend. · ' : r.st.n + ' atend. · ') + fd(r.st.from) + (r.st.to !== r.st.from ? ' a ' + fd(r.st.to) : '') + '</div></div>';
+      var prev = i ? rs[i - 1].v : null, s = r.st, res = s.out.sim_encerrar + s.out.sim_ajudou;
+      return '<div class="rc"><div class="rn">' + dm(r.d) + ' <small>' + wd(r.d) + ' · ' + r.tests + '</small>' + (prev != null ? ' ' + pp(r.v - prev, rev) : '') + '</div><div class="rv">' + f1(r.v) + '%</div>' + dist(S.focus ? stats(sub(r.l)) : s, 6) +
+        '<div class="rs"><b>' + s.n + '</b> atendimentos<br>' + (S.focus ? '<b>' + r.sn + '</b> ' + (r.sn === 1 ? FOC[S.focus].one : FOC[S.focus].noun) : '<b>' + (s.n - s.ticket) + '</b> ficaram no bot · <b>' + s.ticket + '</b> ' + (s.ticket === 1 ? 'foi' : 'foram') + ' para o e-mail<br><b>' + res + '</b> resolvidos · <b>' + s.soft + '</b> possível não retenção') + '</div></div>';
     }).join('');
-    /* temas */
-    var themeRows = {};
-    rs.forEach(function (r) { var m = {}; itemsOfRound(r.id).forEach(function (it) { (m[it.theme] = m[it.theme] || []).push(it); }); Object.keys(m).forEach(function (t) { (themeRows[t] = themeRows[t] || []).push({ round: r.id, st: stats(m[t]), v: share(m[t]), sn: sub(m[t]).length }); }); });
-    var tl = Object.keys(themeRows).map(function (t) {
-      var a = themeRows[t], f = a[0], l = a[a.length - 1], tot = a.reduce(function (s, x) { return s + x.st.n; }, 0), stot = a.reduce(function (s, x) { return s + x.sn; }, 0);
-      return { t: t, f: f, l: l, d: l.v - f.v, multi: a.length > 1, tot: tot, stot: stot, cur: l.v, n: l.st.n, sn: l.sn };
-    });
-    tl.sort(function (a, b) { return THEME_ORDER.indexOf(a.t) - THEME_ORDER.indexOf(b.t); });
-    if (S.focus) tl = tl.filter(function (x) { return x.stot > 0; });
-    var dir = rev ? -1 : 1;
-    var multi = tl.filter(function (x) { return x.multi; }), solid = tl.filter(function (x) { return x.n >= 3; });
-    var best = multi.slice().sort(function (a, b) { return dir * (b.d - a.d); })[0], worst = multi.slice().sort(function (a, b) { return dir * (a.d - b.d); })[0];
-    var top = solid.slice().sort(function (a, b) { return dir * (b.cur - a.cur); })[0], low = solid.slice().sort(function (a, b) { return dir * (a.cur - b.cur); })[0];
-    var vol = tl.slice().sort(function (a, b) { return (S.focus ? b.stot - a.stot : b.tot - a.tot); })[0];
-    var tRows = tl.map(function (x) {
-      var mt = x.multi ? f0(x.f.v) + '% → ' + f0(x.l.v) + '% ' + pp(x.d, rev) : (S.focus ? nn(x.sn) + ' de ' + x.n + ' · ' : x.n + ' atend. · ') + '<b style="color:var(--ink)">' + f0(x.cur) + '%</b>';
-      return '<button class="row clkrow" data-act="themeAll" data-t="' + esc(x.t) + '" type="button" style="border:0;width:100%;text-align:left"><span class="nm">' + esc(x.t) + '</span><span class="mt">' + mt + ' <span class="go">›</span></span></button>';
-    }).join('');
-    var L = flab(), cl = function (v) { var t = tone(good(v)); return t === 'pos' ? 'g' : t === 'warn' ? 'w' : 'r'; };
     var li = '';
-    li += '<li><span class="g">•</span><span>' + (rs.length > 1 ? 'Evolução total ' + fr.id + ' → ' + lr.id + ': <b class="' + ((ev * dir) >= 0 ? 'g' : 'r') + '">' + (ev >= 0 ? '+' : '') + f1(ev) + ' pp</b>' : 'Primeira rodada registrada (' + fr.id + '): a evolução aparece a partir da segunda.') + '</span></li>';
-    li += '<li><span class="g">•</span><span>' + L + ' inicial (' + fr.id + '): <b>' + f1(fr.v) + '%</b></span></li>';
-    li += '<li><span class="g">•</span><span>' + L + ' atual (' + lr.id + '): <b class="' + cl(lr.v) + '">' + f1(lr.v) + '%</b></span></li>';
-    var li2 = '';
-    if (best && best.d * dir > 0) li2 += '<li><span class="g">↑</span><span><b>' + esc(best.t) + '</b>: maior melhora <span class="g">(' + (best.d > 0 ? '+' : '') + f1(best.d) + ' pp)</span></span></li>';
-    if (worst && worst.d * dir < 0) li2 += '<li><span class="r">↓</span><span><b>' + esc(worst.t) + '</b>: atenção necessária <span class="r">(' + (worst.d > 0 ? '+' : '') + f1(worst.d) + ' pp)</span></span></li>';
-    if (top) li2 += '<li><span style="color:var(--ink)">★</span><span>Melhor tema atual: <b>' + esc(top.t) + '</b> <span class="g">(' + f0(top.cur) + '%)</span></span></li>';
-    if (low && low !== top) li2 += '<li><span class="w">!</span><span>Foco de melhoria: <b>' + esc(low.t) + '</b> <span class="w">(' + f0(low.cur) + '%)</span></span></li>';
-    if (vol) li2 += '<li><span style="color:var(--ink)">#</span><span>Maior volume: <b>' + esc(vol.t) + '</b> (' + (S.focus ? vol.stot + ' ' + noun : vol.tot + ' atendimentos') + ')</span></li>';
-    return '<section><div class="sh"><div><h2>' + ic('trend', 26) + ' Evolução por rodada de teste</h2><p class="sub">' + L + ' entre ' + fr.id + ' e ' + lr.id + (rs.length === 1 ? ' (uma rodada até agora)' : '') + '</p></div></div>' +
-      '<div class="card" style="margin-bottom:14px"><h3>' + L + ' por rodada de teste</h3>' + chart(rs) + '</div>' +
+    li += '<li><span class="g">•</span><span>' + (rs.length > 1 ? 'De ' + dm(fr.d) + ' para ' + dm(lr.d) + ': <b class="' + ((rev ? -ev : ev) >= 0 ? 'g' : 'r') + '">' + (ev >= 0 ? '+' : '') + f1(ev) + ' pp</b>' : 'Só um dia de teste até agora (' + dm(fr.d) + '): a comparação aparece a partir do segundo dia.') + '</span></li>';
+    var bestD = rs.slice().sort(function (a, b) { return (rev ? -1 : 1) * (b.v - a.v); })[0], worstD = rs.slice().sort(function (a, b) { return (rev ? -1 : 1) * (a.v - b.v); })[0];
+    if (rs.length > 1) { li += '<li><span class="g">↑</span><span>Melhor dia: <b>' + dm(bestD.d) + '</b> (' + f1(bestD.v) + '%)</span></li><li><span class="r">↓</span><span>Pior dia: <b>' + dm(worstD.d) + '</b> (' + f1(worstD.v) + '%)</span></li>'; }
+    var tk = rs.slice().sort(function (a, b) { return b.st.ticket - a.st.ticket; })[0];
+    if (tk && tk.st.ticket) li += '<li><span class="r">✉</span><span>Mais tickets: <b>' + dm(tk.d) + '</b> (' + tk.st.ticket + ' de ' + tk.st.n + ' atendimentos, ' + f0(pct(tk.st.ticket, tk.st.n)) + '%)</span></li>';
+    var vol = rs.slice().sort(function (a, b) { return b.st.n - a.st.n; })[0];
+    li += '<li><span style="color:var(--ink)">#</span><span>Maior volume: <b>' + dm(vol.d) + '</b> (' + vol.st.n + ' atendimentos)</span></li>';
+    var what = !S.focus ? 'Retenção no chat = atendimentos que <b>não foram para o e-mail</b>. Cada ponto é um dia de teste: por exemplo, 66,7% quer dizer que cerca de 1 a cada 3 atendimentos daquele dia foi para o e-mail (ticket).' : 'Cada ponto mostra a parte dos atendimentos do dia que é: <b>' + esc(FOC[S.focus].label.toLowerCase()) + '</b>.';
+    return '<section><div class="sh"><div><h2>' + ic('trend', 26) + ' Evolução por data de teste</h2><p class="sub">' + esc(tt) + ' · ' + L + ' dia a dia</p></div></div>' +
+      '<div class="card" style="margin-bottom:14px"><h3>' + L + ' por dia</h3><p class="sub" style="margin:2px 0 6px">' + what + '</p>' + chart(rs) + '</div>' +
       '<div class="rcards" style="margin-bottom:14px">' + cards + '</div>' +
-      '<div class="card" style="margin-bottom:14px"><h3>' + L + ' por tema' + (rs.length > 1 ? ' (' + fr.id + ' → ' + lr.id + ')' : '') + ' <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">clique para ver a linha do tempo</span></h3><div class="rows">' + (tRows || '<p class="sub">Nenhum atendimento neste filtro.</p>') + '</div></div>' +
-      '<div class="card"><h3>' + ic('zap', 20) + ' Insights dinâmicos</h3><div class="cols2"><div><p class="eyebrow">Evolução geral</p><ul class="ul">' + li + '</ul></div><div><p class="eyebrow">Destaques por tema</p><ul class="ul">' + (li2 || '<li><span>Sem destaques ainda.</span></li>') + '</ul></div></div></div></section>';
+      '<div class="card" style="margin-bottom:14px"><h3>' + L + ' por tema <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">' + esc(tt) + ' · ' + periodTxt(tst) + '</span></h3><p class="sub" style="margin:2px 0 10px">Cada barra mostra o que aconteceu com os atendimentos do tema. Os temas com mais tickets aparecem primeiro. Clique em um tema para ver a linha do tempo.</p>' + attention(all) + themeBlock(all, 'themeAll') + '</div>' +
+      '<div class="card"><h3>' + ic('zap', 20) + ' Resumo dos dias</h3><ul class="ul">' + li + '</ul></div></section>';
   }
 
   function secRound() {
-    if (!S.A.rounds.length) return '';
-    var rev = inv(), noun = S.focus ? FOC[S.focus].noun : 'retidos';
-    var tabs = ['TU', 'TUC'].map(function (type) {
-      var rs = roundsOf(type); if (!rs.length) return '';
-      return '<div class="frow"><div class="flab">' + ic(type === 'TUC' ? 'team' : 'flask', 16) + '<span>' + type + '</span></div><div class="chips">' + rs.map(function (r) {
-        var l = itemsOfRound(r.id), st = stats(l), t = tone(st.rate);
-        return '<button class="rtab ' + (S.tab === r.id ? 'on' : '') + '" data-act="tab" data-id="' + r.id + '" type="button">' + r.id.replace(/(\d+)$/, '<span style="color:var(--brand)">$1</span>') + ' <small class="' + (t === 'pos' ? 'p' : t === 'warn' ? 'w' : 'n') + '">' + f0(share(l)) + '%</small></button>';
-      }).join('') + '</div></div>';
-    }).join('');
-    var rd = S.A.rounds.filter(function (r) { return r.id === S.tab; })[0] || S.A.rounds[0];
-    var items = itemsOfRound(rd.id), st = stats(items), bd = badgeFor(st), sb = sub(items), sbs = stats(sb);
-    var m = {}; items.forEach(function (it) { (m[it.theme] = m[it.theme] || []).push(it); });
-    var themes = Object.keys(m).filter(function (t) { return !S.focus || sub(m[t]).length; }).sort(function (a, b) { return (S.focus ? sub(m[b]).length - sub(m[a]).length : m[b].length - m[a].length); }).map(function (t) {
-      var s = stats(m[t]), tn = tone(s.rate), ss = stats(sub(m[t]));
-      var lab = S.focus ? nn(ss.n) + ' de ' + s.n + ' · ' + f0(share(m[t])) + '%' : s.n + ' atend. · ' + f0(s.rate) + '% retidos';
-      return '<button class="th" data-act="theme" data-t="' + esc(t) + '" type="button"><div class="l1"><b>' + esc(t) + '</b><span class="' + tn + '-t">' + lab + '</span></div>' + dist(ss, 8) + '</button>';
-    }).join('');
-    var tn = testersNorm(items);
+    var all = SC(); if (!all.length) return '';
+    var days = scopeDays(), bd0 = groupBy(all, 'day');
+    var tabs = '<div class="chips"><button class="rtab ' + (S.tab === 'all' ? 'on' : '') + '" data-act="tab" data-id="all" type="button">Todos os dias</button>' + days.map(function (d) {
+      var l = bd0[d], st = stats(l), t = tone(st.rate);
+      return '<button class="rtab ' + (S.tab === d ? 'on' : '') + '" data-act="tab" data-id="' + d + '" type="button">' + dm(d) + ' <span style="color:var(--muted);font-size:12px">' + wd(d) + '</span> <small class="' + (t === 'pos' ? 'p' : t === 'warn' ? 'w' : 'n') + '">' + f0(share(l)) + '%</small></button>';
+    }).join('') + '</div>';
+    var items = curItems(), st = stats(items), bd = badgeFor(st), sb = sub(items), sbs = stats(sb), noun = S.focus ? FOC[S.focus].noun : 'retidos';
+    var tn = testersNorm(items), nRes = st.out.sim_encerrar + st.out.sim_ajudou;
+    var tsts = {}; items.forEach(function (it) { tsts[it.round] = 1; });
     var testers = Object.keys(tn).filter(function (k) { return !S.focus || sub(tn[k]).length; }).sort(function (a, b) { return tn[b].length - tn[a].length; }).map(function (k) {
       var l = tn[k], s = stats(l), nm = l[0].r.n, t = tone(s.rate);
-      return '<button class="row" data-act="tester" data-k="' + esc(k) + '" type="button" style="border:0;width:100%;text-align:left"><span style="display:flex;gap:11px;align-items:center;min-width:0"><span class="av">' + esc(nm.charAt(0).toUpperCase()) + '</span><span class="nm">' + esc(nm) + '<br><span style="font-weight:400;color:var(--muted);font-size:12px">' + s.n + ' atendimentos · ' + fd(s.from) + '</span></span></span><span class="mt ' + t + '-t" style="font-weight:600">' + (S.focus ? sub(l).length + ' ' + noun : f0(s.rate) + '% retidos') + '</span></button>';
+      return '<button class="row" data-act="tester" data-k="' + esc(k) + '" type="button" style="border:0;width:100%;text-align:left"><span style="display:flex;gap:11px;align-items:center;min-width:0"><span class="av">' + esc(nm.charAt(0).toUpperCase()) + '</span><span class="nm">' + esc(nm) + '<br><span style="font-weight:400;color:var(--muted);font-size:12px">' + s.n + ' atendimentos · ' + s.ticket + ' ticket(s) · ' + (s.out.sim_encerrar + s.out.sim_ajudou) + ' resolvido(s)</span></span></span><span class="mt ' + t + '-t" style="font-weight:600">' + (S.focus ? sub(l).length + ' ' + noun : f0(s.rate) + '% ficaram no bot') + '</span></button>';
     }).join('');
-    return '<section><div class="sh"><div><h2>' + ic('flask', 26) + ' Análise por rodada de teste</h2><p class="sub">Selecione uma rodada para ver temas, avaliadores e atendimentos</p></div></div>' +
+    var title = S.tab === 'all' ? 'Todos os dias' : dm(S.tab) + ' <span style="color:var(--muted);font-size:.6em">' + wd(S.tab) + '</span>';
+    return '<section><div class="sh"><div><h2>' + ic('flask', 26) + ' Análise por data de teste</h2><p class="sub">Escolha um dia para ver temas, avaliadores e atendimentos. Dias do teste ' + esc(testsTxt()) + '.</p></div></div>' +
       '<div class="tabs">' + tabs + '</div>' +
-      '<div class="rhead"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><h3>' + rd.id.replace(/(\d+)$/, '<span style="color:var(--brand)">$1</span>') + '</h3><span class="badge ' + bd[1] + '" style="font-size:15px;padding:4px 14px">' + bd[0] + '</span></div><span class="sub" style="margin:0">Período: ' + fd(st.from) + (st.to !== st.from ? ' - ' + fd(st.to) : '') + '</span></div>' +
-      '<div class="grid4" style="margin-bottom:14px">' + stat('Atendimentos', st.n, ic('users'), Object.keys(tn).length + ' avaliadores') + stat(flab(), f1(share(items)) + '%', ic('trend'), S.focus ? sb.length + ' ' + noun + ' de ' + st.n : st.ret + ' retidos · ' + st.ticket + ' tickets', true) +
+      '<div class="rhead"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><h3>' + title + '</h3><span class="tag">' + Object.keys(tsts).join(' + ') + '</span><span class="badge ' + bd[1] + '" style="font-size:15px;padding:4px 14px" title="Calculado pela avaliação dos clientes">' + bd[0] + '</span></div><span class="sub" style="margin:0">Período: ' + periodTxt(st) + '</span></div>' +
+      '<div class="grid4" style="margin-bottom:14px">' + stat('Atendimentos', st.n, ic('users'), Object.keys(tn).length + ' avaliadores') + stat(flab(), f1(share(items)) + '%', ic('trend'), S.focus ? sb.length + ' ' + noun + ' de ' + st.n : (st.n - st.ticket) + ' ficaram no bot · ' + st.ticket + ' tickets · ' + nRes + ' resolvidos', true) +
       '<div class="card span2"><div class="lab" style="font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px">Distribuição' + (S.focus ? ' (' + esc(FOC[S.focus].label.toLowerCase()) + ')' : '') + '</div>' + dist(sbs, 14) + legend(sbs) + '</div></div>' +
-      '<div class="cols2" style="align-items:start"><div class="card themes"><h3>Análise por tema <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">clique para detalhes</span></h3><div class="rows">' + (themes || '<p class="sub">Nenhum atendimento neste filtro.</p>') + '</div></div>' +
-      '<div class="card"><h3>Avaliadores <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">' + (testers ? testers.split('data-act="tester"').length - 1 : 0) + '</span></h3><div class="scroll">' + (testers || '<p class="sub">Nenhum atendimento neste filtro.</p>') + '</div></div></div></section>';
+      '<div class="card themes" style="margin-bottom:14px"><h3>Temas que pedem atenção <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">clique em um tema para detalhes</span></h3>' + attention(items) + themeBlock(items, 'theme') + '</div>' +
+      '<div class="card"><h3>Avaliadores <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">' + (testers ? testers.split('data-act="tester"').length - 1 : 0) + '</span></h3><div class="scroll">' + (testers || '<p class="sub">Nenhum atendimento neste filtro.</p>') + '</div></div></section>';
   }
 
   function secMessages() {
-    if (!S.A.items.length) return '';
-    var types = ['TU', 'TUC'].map(function (type) {
-      var rs = roundsOf(type); if (!rs.length) return '';
-      return '<div class="frow"><div class="flab">' + ic(type === 'TUC' ? 'team' : 'flask', 16) + '<span>Rodada ' + type + ':</span></div><div class="chips"><button class="chip ' + (S.cm[type] === null ? 'on' : '') + '" data-act="cmRound" data-type="' + type + '" data-id="" type="button">Todas</button>' +
-        rs.map(function (r) { return '<button class="chip ' + (S.cm[type] === r.id ? 'on' : '') + '" data-act="cmRound" data-type="' + type + '" data-id="' + r.id + '" type="button">' + r.id + '</button>'; }).join('') + '</div></div>';
-    }).join('');
-    var base = sub(S.A.items).filter(function (it) {
-      var a = S.cm.TU, b = S.cm.TUC; if (a || b) { if (!((a && it.round === a) || (b && it.round === b))) return false; }
-      return it.msg || it.r.k;
-    });
+    var all = SC(); if (!all.length) return '';
+    var days = scopeDays(), bd0 = groupBy(all, 'day');
+    var dchips = '<button class="chip ' + (!S.cm.day ? 'on' : '') + '" data-act="cmDay" data-id="" type="button">Todas as datas</button>' + days.map(function (d) { return '<button class="chip ' + (S.cm.day === d ? 'on' : '') + '" data-act="cmDay" data-id="' + d + '" type="button">' + dm(d) + ' <small>' + wd(d) + ' (' + bd0[d].length + ')</small></button>'; }).join('');
+    var base = sub(all).filter(function (it) { if (S.cm.day && it.day !== S.cm.day) return false; return it.msg || it.r.k; });
     var f = { all: function () { return true; }, res: isRes, soft: isSoft, nao: function (it) { return it.out === 'nao'; }, sem: function (it) { return it.out === 'sem'; }, ticket: function (it) { return !it.retained; } };
     var cnt = {}; Object.keys(f).forEach(function (k) { cnt[k] = base.filter(f[k]).length; });
     var lab = { all: 'Todos', res: 'Resolvidos', soft: 'Possível não retenção', nao: 'Não ajudou e ficou', sem: 'Sem avaliação final', ticket: 'Ticket por e-mail' };
@@ -591,10 +631,10 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
     var cards = shown.map(function (it) {
       return '<button class="card cm" data-act="item" data-i="' + it.i + '" type="button" style="text-align:left"><div class="who"><span style="display:flex;gap:9px;align-items:center"><span class="av" style="width:30px;height:30px">' + esc(it.r.n.charAt(0).toUpperCase()) + '</span><b>' + esc(it.r.n) + '</b></span><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">' + pillFor(it) + '</span></div>' +
         '<q>' + esc(it.msg || '(sem mensagem inicial)') + '</q>' + (it.r.k ? '<div class="meta"><span class="tag">E-mail</span><span style="overflow-wrap:anywhere">' + esc(it.r.k) + '</span></div>' : '') +
-        '<div class="meta"><span class="tag">' + it.round + '</span><span class="tag">' + esc(it.theme) + (it.themeInferred ? ' (pelo texto)' : '') + '</span><span>' + fdt(it.r.t) + '</span></div></button>';
+        '<div class="meta"><span class="tag">' + it.round + ' · ' + dm(it.day) + '</span><span class="tag">' + esc(it.theme) + (it.themeInferred ? ' (pelo texto)' : '') + '</span><span>' + it.r.t.slice(11, 16) + '</span></div></button>';
     }).join('');
-    return '<section><div class="sh"><div><h2>' + ic('chat', 26) + ' Mensagens dos clientes</h2><p class="sub">O que foi escrito no bot, com data e desfecho de cada atendimento</p></div></div>' +
-      '<div class="card filters">' + types + '<div class="frow"><div class="flab">' + ic('filter', 16) + '<span>Desfecho:</span></div><div class="chips">' + chips + '</div></div></div>' +
+    return '<section><div class="sh"><div><h2>' + ic('chat', 26) + ' Mensagens dos clientes</h2><p class="sub">Teste ' + esc(testsTxt()) + ' · o que foi escrito no bot, com data e desfecho de cada atendimento</p></div></div>' +
+      '<div class="card filters"><div class="frow"><div class="flab">' + ic('flask', 16) + '<span>Data:</span></div><div class="chips">' + dchips + '</div></div><div class="frow"><div class="flab">' + ic('filter', 16) + '<span>Desfecho:</span></div><div class="chips">' + chips + '</div></div></div>' +
       (shown.length ? '<div class="cmts">' + cards + '</div>' + (list.length > shown.length ? '<p style="text-align:center;margin-top:16px"><button class="btn" data-act="more" type="button">Mostrar mais (' + (list.length - shown.length) + ')</button></p>' : '') : '<div class="card empty" style="margin-top:16px">Nenhuma mensagem com esses filtros.</div>') + '</section>';
   }
 
@@ -607,7 +647,7 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
   function focusBar() {
     if (!S.focus) return '';
     var n = sub(S.A.items.filter(function (it) { return S.sel[it.round]; })).length;
-    return '<div class="fbar" role="status"><span>Filtro ativo: <b>' + esc(FOC[S.focus].label) + '</b> · ' + n + ' atendimento(s). Evolução, análise por rodada e mensagens mostram só esse grupo.</span><button class="btn" data-act="focus" data-k="" type="button">Limpar filtro</button></div>';
+    return '<div class="fbar" role="status"><span>Filtro ativo: <b>' + esc(FOC[S.focus].label) + '</b> · ' + n + ' atendimento(s). Evolução, análise por data e mensagens mostram só esse grupo.</span><button class="btn" data-act="focus" data-k="" type="button">Limpar filtro</button></div>';
   }
   function render() {
     var app = $('app');
@@ -646,9 +686,11 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
 
   /* ---------- base de dados ---------- */
   function previewHtml(p) {
-    var a = analyze(p.records, S.cfg), st = stats(a.items), rn = a.rounds.map(function (r) { return r.id; }).join(', ');
-    return '<div class="kv"><div><b>' + st.n + '</b><span>atendimentos</span></div><div><b>' + f1(st.rate) + '%</b><span>retenção</span></div><div><b>' + st.ticket + '</b><span>tickets</span></div><div><b>' + a.rounds.length + '</b><span>rodadas (' + esc(rn) + ')</span></div></div>' +
-      '<p class="sub">Período: ' + fd(st.from) + ' a ' + fd(st.to) + (p.skipped ? ' · ' + p.skipped + ' linha(s) ignorada(s) por data inválida' : '') + '</p>' +
+    var cp = { defaultTest: S.pendTest, testMap: S.pendMap, emailContinue: S.cfg.emailContinue }, an = analyze(p.records, cp), st = stats(an.items), nRes = st.out.sim_encerrar + st.out.sim_ajudou, days = recDays(p.records);
+    return '<label class="f">Esta base é de qual teste?' + testSel('id="pendTest"', S.pendTest) + '<span style="font-weight:400;color:var(--muted)">Todas as datas da planilha entram neste teste (ex.: TU1). Cada data vira um dia dentro dele.</span></label>' +
+      '<div class="kv"><div><b>' + st.n + '</b><span>atendimentos</span></div><div><b>' + f1(st.rate) + '%</b><span>retenção original</span></div><div><b>' + st.ticket + '</b><span>tickets</span></div><div><b>' + f1(pct(nRes, st.n)) + '%</b><span>retenção confirmada</span></div></div>' +
+      '<p class="sub">Período: ' + fd(st.from) + ' a ' + fd(st.to) + ' · teste ' + esc(an.rounds.map(function (r) { return r.id; }).join(', ')) + (p.skipped ? ' · ' + p.skipped + ' linha(s) ignorada(s) por data inválida' : '') + '</p>' +
+      '<details class="how"' + (Object.keys(S.pendMap).length ? ' open' : '') + '><summary>Algumas datas são de outro teste?</summary><div class="dgrid">' + days.map(function (d) { return '<label>' + dm(d) + '/' + d.slice(0, 4) + testSel('class="pdate" data-d="' + d + '"', S.pendMap[d] || S.pendTest) + '</label>'; }).join('') + '</div></details>' +
       '<div class="msg">Ao confirmar, <b>toda a base atual é apagada</b> (' + (S.records.length) + ' atendimentos) e esta planilha passa a ser a fonte de dados do painel.</div>' +
       '<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn pri" data-act="confirmUpload" type="button"' + (S.busy ? ' disabled' : '') + '>Substituir base atual</button><button class="btn" data-act="cancelUpload" type="button">Cancelar</button></div>';
   }
@@ -660,8 +702,9 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
         (S.canWrite ? '<div class="drop" id="drop"><p style="margin:0 0 10px">Arraste a planilha aqui ou escolha o arquivo (CSV da exportação do HiBot; XLSX também funciona)</p><input type="file" id="file" accept=".csv,.xlsx,.xls,text/csv" style="max-width:100%"></div>' : '<div class="msg">Seu acesso é só de leitura: não é possível trocar a base.</div>') +
         (S.note ? '<div class="msg ' + S.note.k + '">' + esc(S.note.t) + '</div>' : '') + (S.pending ? previewHtml(S.pending) : '') + (S.static && S.records.length ? '<div style="margin-top:14px"><button class="btn" data-act="dlBase" type="button">Baixar base.json (para publicar no GitHub)</button></div>' : '');
     } else {
-      body = '<label class="f">Palavras que identificam a rodada TUC (teste do cliente PUMA)<input type="text" id="cfgKw" value="' + esc(S.cfg.tucKeywords.join(', ')) + '"><span style="font-weight:400;color:var(--muted)">Procuradas no e-mail e no nome do avaliador, separadas por vírgula. Quem não bater com nenhuma vai para a rodada TU (time interno).</span></label>' +
-        '<label class="f">Uma nova rodada começa a cada<select id="cfgGroup"><option value="day"' + (S.cfg.groupBy === 'day' ? ' selected' : '') + '>dia de teste</option><option value="week"' + (S.cfg.groupBy === 'week' ? ' selected' : '') + '>semana</option><option value="month"' + (S.cfg.groupBy === 'month' ? ' selected' : '') + '>mês</option></select></label>' +
+      var rdays = recDays(S.records);
+      body = '<label class="f">Teste padrão da base' + testSel('id="cfgDefault"', S.cfg.defaultTest) + '<span style="font-weight:400;color:var(--muted)">Todas as datas entram neste teste, a menos que você escolha outro abaixo.</span></label>' +
+        (rdays.length ? '<details class="how" style="margin-bottom:12px"><summary>Teste de cada data</summary><div class="dgrid">' + rdays.map(function (d) { return '<label>' + dm(d) + '/' + d.slice(0, 4) + testSel('class="rdate" data-d="' + d + '"', S.cfg.testMap[d] || S.cfg.defaultTest) + '</label>'; }).join('') + '</div></details>' : '') +
         '<label class="f" style="grid-template-columns:auto 1fr;align-items:start;gap:10px"><input type="checkbox" id="cfgMail"' + (S.cfg.emailContinue ? ' checked' : '') + ' style="margin-top:3px"><span>Contar "Continuar por e-mail" como ticket, mesmo sem "Outras dúvidas" preenchida<br><span style="font-weight:400;color:var(--muted)">Desligado segue a regra combinada: só "Outras dúvidas" (coluna BP) indica ticket.</span></span></label>' +
         '<div style="margin-top:16px"><button class="btn pri" data-act="saveCfg" type="button">Salvar regras</button></div>' + (S.note ? '<div class="msg ' + S.note.k + '">' + esc(S.note.t) + '</div>' : '');
     }
@@ -694,7 +737,7 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
         var res = tableToRecords(table);
         if (res.error) { S.note = { k: 'err', t: res.error }; S.pending = null; return baseModal(); }
         if (!res.records.length) { S.note = { k: 'err', t: 'Nenhum atendimento com data válida foi encontrado.' }; return baseModal(); }
-        S.pending = { fileName: file.name, records: res.records, skipped: res.skipped }; S.note = null; baseModal();
+        S.pending = { fileName: file.name, records: res.records, skipped: res.skipped }; S.pendTest = S.cfg.defaultTest || 'TU1'; S.pendMap = {}; S.note = null; baseModal();
       };
       try {
         if (/\.xlsx?$/i.test(file.name)) {
@@ -716,9 +759,11 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
   async function confirmUpload() {
     var p = S.pending; if (!p || S.busy) return; S.busy = 'save'; S.note = { k: '', t: 'Salvando…' }; baseModal();
     try {
+      var ncfg = { defaultTest: S.pendTest, testMap: S.pendMap, emailContinue: S.cfg.emailContinue };
       if (S.static) {
+        S.cfg = ncfg;
         var m0 = { batch: Date.now().toString(36), chunks: 1, count: p.records.length, fileName: p.fileName, uploadedAt: new Date().toISOString() };
-        var okS = lsSet({ records: p.records, meta: m0, cfg: S.cfg });
+        var okS = lsSet({ records: p.records, meta: m0, cfg: ncfg });
         S.meta = m0; S.records = p.records; S.pending = null; S.fromLocal = true;
         S.note = okS ? { k: 'ok', t: 'Base substituída neste navegador: ' + m0.count + ' atendimentos. Para o time inteiro ver, baixe o base.json abaixo e troque o arquivo no GitHub.' } : { k: 'err', t: 'Base aplicada, mas o navegador não deixou salvar (armazenamento cheio ou bloqueado).' };
         S.busy = ''; recompute(true); render(); baseModal(); return;
@@ -728,18 +773,20 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
       for (var i = 0; i < chunks.length; i++) { await S.db.doc('base/rows-' + batch + '-' + pad(i)).set({ batch: batch, i: i, rows: chunks[i] }); }
       var meta = { batch: batch, chunks: chunks.length, count: p.records.length, fileName: p.fileName, uploadedAt: new Date().toISOString() };
       await S.db.doc('base/meta').set(meta);
+      await S.db.doc('base/config').set(ncfg); S.cfg = ncfg;
       var old = await S.db.collection('base').get();
       for (var j = 0; j < old.docs.length; j++) { var d = old.docs[j], dd = d.data() || {}; if (/^rows-/.test(d.id) && dd.batch !== batch) await S.db.doc('base/' + d.id).delete(); }
       S.meta = meta; S.records = p.records; S.pending = null; S.note = { k: 'ok', t: 'Base substituída: ' + meta.count + ' atendimentos de ' + meta.fileName + '.' };
     } catch (e) {
-      S.meta = null; S.records = p.records; S.pending = null; S.localOnly = true;
+      S.meta = null; S.records = p.records; S.pending = null; S.localOnly = true; S.cfg = ncfg;
       S.note = { k: 'err', t: (e && e.code === 'nodb' ? 'O salvamento compartilhado não está disponível nesta visualização.' : 'Não consegui salvar para todos (' + ((e && (e.message || e.code)) || 'erro') + ').') + ' A planilha foi aplicada só neste navegador.' };
     }
     S.busy = ''; recompute(true); render(); baseModal();
   }
   async function saveCfg() {
-    var kw = ($('cfgKw').value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-    S.cfg = { tucKeywords: kw, groupBy: $('cfgGroup').value, emailContinue: $('cfgMail').checked };
+    var dflt = $('cfgDefault').value, tm = {};
+    Array.prototype.forEach.call(document.querySelectorAll('.rdate'), function (el) { if (el.value !== dflt) tm[el.getAttribute('data-d')] = el.value; });
+    S.cfg = { defaultTest: dflt, testMap: tm, emailContinue: $('cfgMail').checked };
     var ok = true;
     if (S.static) { var cur = lsGet() || { records: S.records, meta: S.meta }; cur.cfg = S.cfg; ok = lsSet(cur); if (ok) { S.note = { k: 'ok', t: 'Regras salvas neste navegador. Para valerem para o time, baixe o base.json e troque no GitHub.' }; recompute(true); render(); return baseModal(); } }
     else if (S.db) { try { await S.db.doc('base/config').set(S.cfg); } catch (e) { ok = false; } } else ok = false;
@@ -751,7 +798,7 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
   var tmr = null;
   function applySnapshot(snap) {
     var docs = {}; snap.docs.forEach(function (d) { docs[d.id] = d.data(); });
-    if (docs.config) S.cfg = { tucKeywords: docs.config.tucKeywords || ['puma'], groupBy: docs.config.groupBy || 'day', emailContinue: !!docs.config.emailContinue };
+    if (docs.config) S.cfg = normCfg(docs.config);
     var meta = docs.meta;
     if (!meta) { if (!S.localOnly) { S.meta = null; S.records = []; } }
     else {
@@ -770,7 +817,7 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
     var base = null;
     try { var r = await fetch('base.json', { cache: 'no-store' }); if (r.ok) base = await r.json(); } catch (e) {}
     var loc = lsGet(), use = loc && loc.records && loc.records.length ? loc : base;
-    if (use && use.records) { S.records = use.records; S.meta = use.meta || null; if (use.cfg) S.cfg = use.cfg; S.fromLocal = use === loc; }
+    if (use && use.records) { S.records = use.records; S.meta = use.meta || null; if (use.cfg) S.cfg = normCfg(use.cfg); S.fromLocal = use === loc; }
     S.status = 'ready'; recompute(true); render();
   }
   async function initDb() {
@@ -801,14 +848,19 @@ if (false) module.exports = { parseDelimited: parseDelimited, tableToRecords: ta
     else if (a === 'selAll') { var rs = roundsOf(d.type), all = rs.every(function (r) { return S.sel[r.id]; }), other = S.A.rounds.some(function (r) { return r.type !== d.type && S.sel[r.id]; }); if (all && !other) return; rs.forEach(function (r) { S.sel[r.id] = !all; }); render(); }
     else if (a === 'selToggle') { var n = S.A.rounds.filter(function (r) { return S.sel[r.id]; }).length; if (S.sel[d.id] && n === 1) return; S.sel[d.id] = !S.sel[d.id]; render(); }
     else if (a === 'tab') { S.tab = d.id; render(); }
-    else if (a === 'cmRound') { S.cm[d.type] = d.id ? (S.cm[d.type] === d.id ? null : d.id) : null; S.cm.limit = 40; render(); }
+    else if (a === 'cmDay') { S.cm.day = d.id ? (S.cm.day === d.id ? null : d.id) : null; S.cm.limit = 40; render(); }
     else if (a === 'cmOut') { S.cm.out = d.k; S.cm.limit = 40; render(); }
     else if (a === 'more') { S.cm.limit += 40; render(); }
     else if (a === 'item') { var it = S.A.items[+d.i]; if (it) openModal('<h3>Atendimento</h3><p class="sub" style="margin:0">' + esc(it.r.id) + '</p>' + itemBlock(it)); }
     else if (a === 'focus') { S.focus = (d.k && d.k !== S.focus) ? d.k : null; render(); }
     else if (a === 'themeAll') timelineModal(d.t);
-    else if (a === 'theme') { listModal(d.t, 'Rodada ' + S.tab, sub(itemsOfRound(S.tab)).filter(function (it) { return it.theme === d.t; })); }
-    else if (a === 'tester') { var items = sub(itemsOfRound(S.tab)).filter(function (it) { return it.r.n.trim().toLowerCase() === d.k; }); listModal(items[0] ? items[0].r.n : d.k, 'Rodada ' + S.tab, items); }
+    else if (a === 'theme') { listModal(d.t, S.tab === 'all' ? 'Todos os dias' : dm(S.tab), sub(curItems()).filter(function (it) { return it.theme === d.t; })); }
+    else if (a === 'tester') { var items = sub(curItems()).filter(function (it) { return it.r.n.trim().toLowerCase() === d.k; }); listModal(items[0] ? items[0].r.n : d.k, S.tab === 'all' ? 'Todos os dias' : dm(S.tab), items); }
+  });
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.id === 'pendTest') { S.pendTest = t.value; S.pendMap = {}; baseModal(); }
+    else if (t.classList && t.classList.contains('pdate')) { var dd = t.getAttribute('data-d'); if (t.value === S.pendTest) delete S.pendMap[dd]; else S.pendMap[dd] = t.value; baseModal(); }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); else if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('clk')) { e.preventDefault(); e.target.click(); } });
   $('today').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
