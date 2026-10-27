@@ -332,6 +332,7 @@ function classifyAnswer(v) {
 }
 function outcomeOf(rec, cfg) {
   if (rec.k) return { key: 'ticket', via: 'outras_duvidas' };
+  for (var gk in rec.g) if (/^ajuda com defeito$/i.test(rec.g[gk])) return { key: 'ticket', via: 'ajuda_defeito' };
   if (cfg && cfg.emailContinue && rec.g.duvida_do_cliente && /continuar por e-?mail/i.test(rec.g.duvida_do_cliente)) return { key: 'ticket', via: 'continuar_email' };
   var ans = null, k;
   for (k in rec.g) if (/^(ajudou|encontrou_o_produto)/.test(k)) { var c = classifyAnswer(rec.g[k]); if (c) ans = c; }
@@ -675,7 +676,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
       var rdays = recDays(S.records);
       body = '<label class="f">Teste padrão da base' + testSel('id="cfgDefault"', S.cfg.defaultTest) + '<span style="font-weight:400;color:var(--muted)">Todas as datas entram neste teste, a menos que você escolha outro abaixo.</span></label>' +
         (rdays.length ? '<details class="how" style="margin-bottom:12px"><summary>Teste de cada data</summary><div class="dgrid">' + rdays.map(function (d) { return '<label>' + dm(d) + '/' + d.slice(0, 4) + testSel('class="rdate" data-d="' + d + '"', S.cfg.testMap[d] || S.cfg.defaultTest) + '</label>'; }).join('') + '</div></details>' : '') +
-        '<label class="f" style="grid-template-columns:auto 1fr;align-items:start;gap:10px"><input type="checkbox" id="cfgMail"' + (S.cfg.emailContinue ? ' checked' : '') + ' style="margin-top:3px"><span>Contar "Continuar por e-mail" como ticket, mesmo sem "Outras dúvidas" preenchida<br><span style="font-weight:400;color:var(--muted)">Desligado segue a regra combinada: só "Outras dúvidas" (coluna BP) indica ticket.</span></span></label>' +
+        '<label class="f" style="grid-template-columns:auto 1fr;align-items:start;gap:10px"><input type="checkbox" id="cfgMail"' + (S.cfg.emailContinue ? ' checked' : '') + ' style="margin-top:3px"><span>Contar "Continuar por e-mail" como ticket, mesmo sem "Outras dúvidas" preenchida<br><span style="font-weight:400;color:var(--muted)">Desligado segue a regra combinada: "Outras dúvidas" (coluna BP) preenchida ou a resposta "Ajuda com defeito" indica ticket.</span></span></label>' +
         '<div style="margin-top:16px"><button class="btn pri" data-act="saveCfg" type="button">Salvar regras</button></div>' + (S.note ? '<div class="msg ' + S.note.k + '">' + esc(S.note.t) + '</div>' : '');
     }
     openModal('<h3>Atualizar base</h3>' + tabs + body);
