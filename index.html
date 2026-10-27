@@ -172,7 +172,7 @@ input[type=text],select{font:inherit;color:var(--ink);background:var(--card);bor
 .story .sep{align-self:stretch;border-left:2px dashed var(--line);margin:6px 4px;flex:none}
 .story.big .stp.out{border:2px solid var(--pos);background:var(--pos-bg);flex-basis:230px}
 .story.big .stp.out .sm{color:var(--ink);opacity:.8}
-.tagout{justify-self:start;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--pos);color:var(--bg);border-radius:99px;padding:2px 10px;margin-bottom:4px}
+.tagout{justify-self:start;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--pos);margin-bottom:2px}
 .story .arr{align-self:center;color:var(--muted);font-style:normal;font-size:20px}
 .steplab{display:flex;gap:10px;align-items:center;margin:22px 0 10px;font-weight:600;font-size:15px}
 .steplab span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;font-size:13px}
@@ -323,7 +323,7 @@ var OUTCOMES = [
   { key: 'sim_ajudou', label: 'Resolvido: sim, ajudou ou esclareceu', short: 'Ajudou', tone: 'pos1' },
   { key: 'sem', label: 'Sem avaliação final', short: 'Sem avaliação', tone: 'neu' },
   { key: 'nao', label: 'Disse que não ajudou e ficou', short: 'Não ajudou', tone: 'warn' },
-  { key: 'ticket', label: 'Abriu ticket por e-mail', short: 'Ticket', tone: 'neg' }
+  { key: 'ticket', label: 'Abriu ticket na inbox', short: 'Ticket', tone: 'neg' }
 ];
 function classifyAnswer(v) {
   if (!v) return null;
@@ -446,7 +446,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
   var FOC = {
     ret: { label: 'Retenção no chat', noun: 'retidos', one: 'retido', f: function (it) { return it.retained; }, inv: false },
     res: { label: 'Resolvido no bot', noun: 'resolvidos', one: 'resolvido', f: isRes, inv: false },
-    ticket: { label: 'Tickets por e-mail', noun: 'tickets', one: 'ticket', f: function (it) { return !it.retained; }, inv: true },
+    ticket: { label: 'Tickets na inbox', noun: 'tickets', one: 'ticket', f: function (it) { return !it.retained; }, inv: true },
     soft: { label: 'Possível retenção', noun: 'possíveis retidos', one: 'possível retido', f: isSoft, inv: true },
     nao: { label: 'Disse que não ajudou e ficou', noun: 'que não ajudaram', one: 'que não ajudou', f: function (it) { return it.out === 'nao'; }, inv: true },
     sem: { label: 'Sem avaliação final', noun: 'sem avaliação', one: 'sem avaliação', f: function (it) { return it.out === 'sem'; }, inv: true }
@@ -460,7 +460,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
   function flab() { return S.focus ? FOC[S.focus].label : 'Retenção no chat'; }
   function pillFor(it) {
     var o = OUT[it.out];
-    return '<span class="pill o-' + o.key + '">' + esc(o.short) + '</span>' + (isSoft(it) ? '<span class="pill soft" title="Não foi para o e-mail, mas não confirmou que o bot resolveu. Conta como retido, porém pode não ter ajudado.">Possível retenção</span>' : '');
+    return '<span class="pill o-' + o.key + '">' + esc(o.short) + '</span>' + (isSoft(it) ? '<span class="pill soft" title="Não foi para a inbox, mas não confirmou que o bot resolveu. Conta como retido, porém pode não ter ajudado.">Possível retenção</span>' : '');
   }
   function pp(d, rev) { var up = rev ? d < -0.05 : d > 0.05, dn = rev ? d > 0.05 : d < -0.05; return '<span class="pp ' + (up ? 'up' : dn ? 'dn' : 'eq') + '">' + (d > 0.05 ? '▲ +' : d < -0.05 ? '▼ ' : '= ') + f1(d) + ' pp</span>'; }
 
@@ -488,7 +488,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     if (!keys.length) return '<p class="sub">Nenhum atendimento neste filtro.</p>';
     return themeLegend() + '<div class="rows">' + keys.map(function (t) {
       var l = g[t], s = stats(l), ss = S.focus ? stats(sub(l)) : s, n = s.n, res = s.out.sim_encerrar + s.out.sim_ajudou;
-      var chip = s.ticket ? '<span class="chipk neg">' + s.ticket + (s.ticket === 1 ? ' ticket por e-mail' : ' tickets por e-mail') + '</span>' : '<span class="chipk ok">sem tickets</span>';
+      var chip = s.ticket ? '<span class="chipk neg">' + s.ticket + (s.ticket === 1 ? ' ticket na inbox' : ' tickets na inbox') + '</span>' : '<span class="chipk ok">sem tickets</span>';
       var head = S.focus ? nn(ss.n) + ' de ' + n + ' atend.' : n + (n === 1 ? ' atendimento' : ' atendimentos');
       return '<button class="th" data-act="' + act + '" data-t="' + esc(t) + '" type="button"><div class="l1"><b>' + esc(t) + ' <span class="go">›</span></b><span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span style="color:var(--muted)">' + head + '</span>' + chip + '</span></div>' + dist(ss, 9) +
         '<div class="l2"><span><i class="dot o-sim_ajudou"></i><b>' + res + '</b> resolvido</span><span><i class="dot o-nao"></i><b>' + s.out.nao + '</b> não ajudou</span><span><i class="dot o-sem"></i><b>' + s.out.sem + '</b> sem avaliação</span><span><i class="dot o-ticket"></i><b>' + s.ticket + '</b> ticket</span><span class="rt">' + f0(s.rate) + '% ficaram no bot</span></div></button>';
@@ -514,19 +514,19 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     };
     var merged = '<div class="story big">' +
       stp('', st.n, 'atendimentos no total', Object.keys(testersNorm(items)).length + ' avaliadores · ' + scopeDays().length + ' dia(s) de teste', { k: '', on: !S.focus }) + '<i class="arr">→</i>' +
-      stp('neg', f1(pct(st.ticket, st.n)) + '%', 'foram para o e-mail', st.ticket + ' de ' + st.n + ' · não retidos', { k: 'ticket', on: S.focus === 'ticket' }) + '<i class="arr">→</i>' +
-      stp('', f1(st.rate) + '%', 'ficaram no bot: possível retenção', kept + ' de ' + st.n + ' · número bruto, não confirma ajuda', { k: 'ret', on: S.focus === 'ret' }) + '<i class="sep" title="Fora da soma de 100%"></i>' +
-      stp('ok out', f1(pct(nRes, st.n)) + '%', 'confirmaram que foram ajudados: retenção confirmada', nRes + ' de ' + st.n + ' disseram "Sim" · número oficial. Está dentro dos ' + kept + ' que ficaram no bot, por isso não entra na soma ' + f1(pct(st.ticket, st.n)) + '% + ' + f1(st.rate) + '% = 100%.', { k: 'res', on: S.focus === 'res' }, 'Fora da soma de 100%') + '</div>';
+      stp('', f1(st.rate) + '%', 'ficaram no bot: possível retenção', kept + ' de ' + st.n + ' · número bruto, não confirma ajuda', { k: 'ret', on: S.focus === 'ret' }) + '<i class="arr">→</i>' +
+      stp('neg', f1(pct(st.ticket, st.n)) + '%', 'foram para a inbox', st.ticket + ' de ' + st.n + ' · não retidos', { k: 'ticket', on: S.focus === 'ticket' }) + '<i class="sep" title="Fora da soma de 100%"></i>' +
+      stp('ok out', f1(pct(nRes, st.n)) + '%', 'confirmaram que foram ajudados: retenção confirmada', nRes + ' de ' + st.n + ' disseram "Sim" · número oficial. Faz parte dos ' + kept + ' que ficaram no bot, então não entra na soma ' + f1(st.rate) + '% + ' + f1(pct(st.ticket, st.n)) + '% = 100%.', { k: 'res', on: S.focus === 'res' }, 'Fora da soma de 100%') + '</div>';
     return '<section class="fade"><div class="sh"><div><h2>Visão geral · ' + esc(testsTxt()) + '</h2><p class="sub">Período ' + periodTxt(st) + '. Clique em um card para filtrar o restante da página.</p></div><span class="badge ' + bd[1] + '" title="Calculado pela avaliação dos clientes (quem respondeu se o bot ajudou)">' + bd[0] + '</span></div>' +
       '<div class="card filters" style="margin-bottom:14px">' + filt + '</div>' +
-      '<p class="steplab"><span>1</span>Resultado geral: quantos ficaram no bot e quantos foram para o e-mail</p>' + merged +
+      '<p class="steplab"><span>1</span>Resultado geral: quantos ficaram no bot e quantos foram para a inbox</p>' + merged +
       '<p class="steplab"><span>2</span>Dos ' + kept + ' que ficaram no bot: o cliente foi ajudado?</p>' +
       '<div class="grid4">' +
       stat('Resolvido no bot', nRes, ic('chat'), nRes + ' responderam sim (' + st.out.sim_encerrar + ' “sim, pode encerrar” e ' + st.out.sim_ajudou + ' “sim, ajudou ou esclareceu”)', false, null, { k: 'res', on: S.focus === 'res' }) +
-      stat('Disse que não ajudou e ficou', st.out.nao, ic('mail'), f1(pct(st.out.nao, st.n)) + '% · não foi para o e-mail', false, null, { k: 'nao', on: S.focus === 'nao' }) +
+      stat('Disse que não ajudou e ficou', st.out.nao, ic('mail'), f1(pct(st.out.nao, st.n)) + '% · não foi para a inbox', false, null, { k: 'nao', on: S.focus === 'nao' }) +
       stat('Sem avaliação final', st.out.sem, ic('filter'), f1(pct(st.out.sem, st.n)) + '% · saiu ou não chegou à pergunta', false, null, { k: 'sem', on: S.focus === 'sem' }) +
       '</div>' +
-      '<div class="card clk soft-card' + (S.focus === 'soft' ? ' on' : '') + '" data-act="focus" data-k="soft" role="button" tabindex="0" style="margin-top:14px"><div><span class="pill soft">Possível retenção</span> <b style="font-size:20px;margin-left:8px">' + st.soft + '</b> <span style="color:var(--muted)">atendimentos · ' + f1(softPct) + '%</span></div><p class="sub" style="margin:8px 0 0">É a soma de quem <b>disse que não ajudou</b> (' + st.out.nao + ') com quem ficou <b>sem avaliação final</b> (' + st.out.sem + '). Nenhum abriu ticket, então a possível retenção os conta como retidos, mas o bot não confirmou que resolveu. A verdade fica entre a retenção confirmada (' + f1(pct(nRes, st.n)) + '%) e a original (' + f1(st.rate) + '%). Fora do cálculo; use como alerta. Clique para ver só esses.</p></div>' +
+      '<div class="card clk soft-card' + (S.focus === 'soft' ? ' on' : '') + '" data-act="focus" data-k="soft" role="button" tabindex="0" style="margin-top:14px"><div><span class="pill soft">Possível retenção</span> <b style="font-size:20px;margin-left:8px">' + st.soft + '</b> <span style="color:var(--muted)">atendimentos · ' + f1(softPct) + '%</span></div><p class="sub" style="margin:8px 0 0">Dos ' + kept + ' que ficaram no bot, <b>' + st.soft + '</b> não confirmaram que foram ajudados: <b>' + st.out.nao + ' disseram que não ajudou</b> e <b>' + st.out.sem + ' saíram sem avaliação final</b>. Nenhum deles abriu ticket na inbox, por isso contam como retidos, mas o bot não confirmou que resolveu. O resultado real fica entre a retenção confirmada (' + f1(pct(nRes, st.n)) + '%) e a possível retenção (' + f1(st.rate) + '%). Esse grupo não entra no cálculo oficial e serve de alerta. Clique para ver só esses atendimentos.</p></div>' +
       '<div class="card" style="margin-top:14px"><h3>Desfecho dos atendimentos' + tag + '</h3>' + dist(sv, 18) + legend(sv) +
       (sv.ans ? '<p class="sub" style="margin-top:12px">Entre quem respondeu à pergunta "ajudou?", <b>' + f1(sv.resolved) + '%</b> disse que sim (' + sv.yes + ' de ' + sv.ans + ').</p>' : '') +
       '</div></section>';
@@ -596,13 +596,13 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     var base = sub(all).filter(function (it) { if (S.cm.day && it.day !== S.cm.day) return false; return it.msg || it.r.k; });
     var f = { all: function () { return true; }, res: isRes, soft: isSoft, nao: function (it) { return it.out === 'nao'; }, sem: function (it) { return it.out === 'sem'; }, ticket: function (it) { return !it.retained; } };
     var cnt = {}; Object.keys(f).forEach(function (k) { cnt[k] = base.filter(f[k]).length; });
-    var lab = { all: 'Todos', res: 'Resolvidos', soft: 'Possível retenção', nao: 'Não ajudou e ficou', sem: 'Sem avaliação final', ticket: 'Ticket por e-mail' };
+    var lab = { all: 'Todos', res: 'Resolvidos', soft: 'Possível retenção', nao: 'Não ajudou e ficou', sem: 'Sem avaliação final', ticket: 'Ticket na inbox' };
     var chips = Object.keys(lab).map(function (k) { return '<button class="chip ' + (S.cm.out === k ? 'on' : '') + '" data-act="cmOut" data-k="' + k + '" type="button">' + lab[k] + '<small>(' + cnt[k] + ')</small></button>'; }).join('');
     var list = base.filter(f[S.cm.out]).sort(function (a, b) { return a.r.t < b.r.t ? 1 : -1; });
     var shown = list.slice(0, S.cm.limit);
     var cards = shown.map(function (it) {
       return '<button class="card cm" data-act="item" data-i="' + it.i + '" type="button" style="text-align:left"><div class="who"><span style="display:flex;gap:9px;align-items:center"><span class="av" style="width:30px;height:30px">' + esc(it.r.n.charAt(0).toUpperCase()) + '</span><b>' + esc(it.r.n) + '</b></span><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">' + pillFor(it) + '</span></div>' +
-        '<q>' + esc(it.msg || '(sem mensagem inicial)') + '</q>' + (it.r.k ? '<div class="meta"><span class="tag">E-mail</span><span style="overflow-wrap:anywhere">' + esc(it.r.k) + '</span></div>' : '') +
+        '<q>' + esc(it.msg || '(sem mensagem inicial)') + '</q>' + (it.r.k ? '<div class="meta"><span class="tag">Inbox</span><span style="overflow-wrap:anywhere">' + esc(it.r.k) + '</span></div>' : '') +
         '<div class="meta"><span class="tag">' + it.round + ' · ' + dm(it.day) + '</span><span class="tag">' + esc(it.theme) + (it.themeInferred ? ' (pelo texto)' : '') + '</span><span>' + it.r.t.slice(11, 16) + '</span></div></button>';
     }).join('');
     return '<section><div class="sh"><div><h2>' + ic('chat', 26) + ' Mensagens dos clientes</h2><p class="sub">Teste ' + esc(testsTxt()) + ' · o que foi escrito no bot, com data e desfecho de cada atendimento</p></div></div>' +
@@ -636,7 +636,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
   }
   function itemBlock(it) {
     return '<div class="item"><div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>' + esc(it.r.n) + '</b><span class="tag">' + it.round + '</span><span class="tag">' + esc(it.theme) + (it.themeInferred ? ' (pelo texto)' : '') + '</span></span>' + pillFor(it) + '</div>' +
-      '<div style="overflow-wrap:anywhere">' + esc(it.msg || '(sem mensagem inicial)') + '</div>' + (it.r.k ? '<div class="msg" style="margin:0"><b>Texto de "Outras dúvidas" (vai para o e-mail):</b> ' + esc(it.r.k) + '</div>' : '') +
+      '<div style="overflow-wrap:anywhere">' + esc(it.msg || '(sem mensagem inicial)') + '</div>' + (it.r.k ? '<div class="msg" style="margin:0"><b>Texto de "Outras dúvidas" (vai para a inbox):</b> ' + esc(it.r.k) + '</div>' : '') +
       '<div class="meta" style="font-size:12px;color:var(--muted)">' + fdt(it.r.t) + '</div><details class="how" style="margin:0"><summary>Caminho no bot</summary><div class="path">' + pathChips(it.r) + '</div></details></div>';
   }
   function listModal(title, subt, items) {
