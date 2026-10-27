@@ -169,10 +169,6 @@ input[type=text],select{font:inherit;color:var(--ink);background:var(--card);bor
 .story.big .stp b{font-size:46px}
 .story.big .stp .cap{font-size:16px;font-weight:600;color:var(--ink);line-height:1.25;margin-top:2px}
 .story.big .stp .sm{font-size:12.5px;color:var(--muted);line-height:1.35}
-.story .sep{align-self:stretch;border-left:2px dashed var(--line);margin:6px 4px;flex:none}
-.story.big .stp.out{border:2px solid var(--pos);background:var(--pos-bg);flex-basis:230px}
-.story.big .stp.out .sm{color:var(--ink);opacity:.8}
-.tagout{justify-self:start;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--pos);margin-bottom:2px}
 .story .arr{align-self:center;color:var(--muted);font-style:normal;font-size:20px}
 .steplab{display:flex;gap:10px;align-items:center;margin:22px 0 10px;font-weight:600;font-size:15px}
 .steplab span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;font-size:13px}
@@ -509,14 +505,16 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     }).join('');
     var sv = stats(sub(items)), tag = S.focus ? ' <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">só ' + esc(FOC[S.focus].label.toLowerCase()) + '</span>' : '';
     var softPct = pct(st.soft, st.n);
-    var stp = function (cls, val, cap, small, clk, badge) {
-      return '<div class="stp clk ' + cls + (clk.on ? ' on' : '') + '" data-act="focus" data-k="' + clk.k + '" role="button" tabindex="0">' + (badge ? '<span class="tagout">' + esc(badge) + '</span>' : '') + '<b>' + esc(val) + '</b><span class="cap">' + esc(cap) + '</span><span class="sm">' + esc(small) + '</span></div>';
+    var stp = function (cls, val, cap, small, clk) {
+      return '<div class="stp clk ' + cls + (clk.on ? ' on' : '') + '" data-act="focus" data-k="' + clk.k + '" role="button" tabindex="0"><b>' + esc(val) + '</b><span class="cap">' + esc(cap) + '</span><span class="sm">' + esc(small) + '</span></div>';
     };
+    var arr = '<i class="arr">→</i>';
     var merged = '<div class="story big">' +
-      stp('', st.n, 'atendimentos no total', Object.keys(testersNorm(items)).length + ' avaliadores · ' + scopeDays().length + ' dia(s) de teste', { k: '', on: !S.focus }) + '<i class="arr">→</i>' +
-      stp('', f1(st.rate) + '%', 'ficaram no bot: possível retenção', kept + ' de ' + st.n + ' · número bruto, não confirma ajuda', { k: 'ret', on: S.focus === 'ret' }) + '<i class="arr">→</i>' +
-      stp('neg', f1(pct(st.ticket, st.n)) + '%', 'foram para a inbox', st.ticket + ' de ' + st.n + ' · não retidos', { k: 'ticket', on: S.focus === 'ticket' }) + '<i class="sep" title="Fora da soma de 100%"></i>' +
-      stp('ok out', f1(pct(nRes, st.n)) + '%', 'confirmaram que foram ajudados: retenção confirmada', nRes + ' de ' + st.n + ' disseram "Sim" · número oficial. Faz parte dos ' + kept + ' que ficaram no bot, então não entra na soma ' + f1(st.rate) + '% + ' + f1(pct(st.ticket, st.n)) + '% = 100%.', { k: 'res', on: S.focus === 'res' }, 'Fora da soma de 100%') + '</div>';
+      stp('', st.n, 'atendimentos no total', Object.keys(testersNorm(items)).length + ' avaliadores · ' + scopeDays().length + ' dia(s) de teste', { k: '', on: !S.focus }) + arr +
+      stp('', f1(pct(st.soft, st.n)) + '%', 'ficaram no bot sem confirmar: possível retenção', st.soft + ' de ' + st.n + ' · disseram que não ajudou ou saíram sem avaliação final', { k: 'soft', on: S.focus === 'soft' }) + arr +
+      stp('neg', f1(pct(st.ticket, st.n)) + '%', 'foram para a inbox', st.ticket + ' de ' + st.n + ' · não retidos', { k: 'ticket', on: S.focus === 'ticket' }) + arr +
+      stp('ok', f1(pct(nRes, st.n)) + '%', 'confirmaram que foram ajudados: retenção confirmada', nRes + ' de ' + st.n + ' disseram "Sim" · número oficial', { k: 'res', on: S.focus === 'res' }) + '</div>' +
+      '<p class="sub" style="margin:10px 0 0">Possível retenção + inbox + retenção confirmada = 100% dos atendimentos (' + st.soft + ' + ' + st.ticket + ' + ' + nRes + ' = ' + st.n + ').</p>';
     return '<section class="fade"><div class="sh"><div><h2>Visão geral · ' + esc(testsTxt()) + '</h2><p class="sub">Período ' + periodTxt(st) + '. Clique em um card para filtrar o restante da página.</p></div><span class="badge ' + bd[1] + '" title="Calculado pela avaliação dos clientes (quem respondeu se o bot ajudou)">' + bd[0] + '</span></div>' +
       '<div class="card filters" style="margin-bottom:14px">' + filt + '</div>' +
       '<p class="steplab"><span>1</span>Resultado geral: quantos ficaram no bot e quantos foram para a inbox</p>' + merged +
