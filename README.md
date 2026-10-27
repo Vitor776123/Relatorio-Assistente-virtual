@@ -16,7 +16,7 @@ Subir a planilha no painel sem trocar o `base.json` vale só para aquele navegad
 
 ## Regras de cálculo
 - **Teste** (TU1, TU2, TUC1...) é escolhido por você ao subir a base. Cada **data** é um dia dentro do teste.
-- **Ticket** = coluna `tag_outras_duvidas` (BP) preenchida. Ticket = foi para o e-mail = não retido.
+- **Ticket** = coluna `tag_outras_duvidas` (BP) preenchida. Ticket = foi para a inbox = não retido.
 - **Retenção original** = atendimentos sem ticket (ficaram no bot). Número bruto: não confirma que ajudou.
 - **Retenção confirmada (oficial)** = atendimentos em que o cliente respondeu "Sim" à pergunta de ajuda, sobre o total.
 - **Possível não retenção** = ficou no bot, mas disse que não ajudou ou saiu sem avaliação final. Fora do cálculo, é um alerta.
