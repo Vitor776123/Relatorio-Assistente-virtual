@@ -16,7 +16,7 @@ Subir a planilha no painel sem trocar o `base.json` vale só para aquele navegad
 
 ## Regras de cálculo
 - **Teste** (TU1, TU2, TUC1...) é escolhido por você ao subir a base. Cada **data** é um dia dentro do teste.
-- **Ticket** = coluna `tag_outras_duvidas` (BP) preenchida. Ticket = foi para a inbox = não retido.
+- **Ticket** = coluna `tag_outras_duvidas` (BP) preenchida **ou** resposta "Ajuda com defeito" (`tag_ajudou_dev_8a90`). Ticket = foi para a inbox = não retido. A resposta aparece em "Caminho no bot" no detalhe do atendimento.
 - **Retenção no chat** = atendimentos sem ticket (ficaram no bot). Número bruto: não confirma que ajudou.
 - **Retenção confirmada (oficial)** = atendimentos em que o cliente respondeu "Sim" à pergunta de ajuda, sobre o total.
 - **Possível retenção** = ficou no bot, mas disse que não ajudou ou saiu sem avaliação final (não confirmou ajuda). Possível retenção + inbox + retenção confirmada = 100% dos atendimentos.
