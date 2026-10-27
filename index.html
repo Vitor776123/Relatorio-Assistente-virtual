@@ -158,7 +158,7 @@ input[type=text],select{font:inherit;color:var(--ink);background:var(--card);bor
 .tl{margin-top:14px;border-left:2px solid var(--line);padding-left:16px;display:grid;gap:18px}
 .tlday{position:relative}.tlday:before{content:"";position:absolute;left:-23px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 3px var(--card)}
 .tlh{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
-.tlit{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;align-items:start;margin-bottom:8px}.tlt{font-size:12px;color:var(--muted);padding-top:12px;font-variant-numeric:tabular-nums}
+.tlit{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;align-items:start;margin-bottom:8px}
 
 .story{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin-bottom:18px}
 .story .stp{flex:1 1 170px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:2px;align-content:start}
@@ -635,7 +635,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
   function itemBlock(it) {
     return '<div class="item"><div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>' + esc(it.r.n) + '</b><span class="tag">' + it.round + '</span><span class="tag">' + esc(it.theme) + (it.themeInferred ? ' (pelo texto)' : '') + '</span></span>' + pillFor(it) + '</div>' +
       '<div style="overflow-wrap:anywhere">' + esc(it.msg || '(sem mensagem inicial)') + '</div>' + (it.r.k ? '<div class="msg" style="margin:0"><b>Texto de "Outras dúvidas" (vai para a inbox):</b> ' + esc(it.r.k) + '</div>' : '') +
-      '<div class="meta" style="font-size:12px;color:var(--muted)">' + fdt(it.r.t) + '</div><details class="how" style="margin:0"><summary>Caminho no bot</summary><div class="path">' + pathChips(it.r) + '</div></details></div>';
+      '<div class="meta" style="font-size:12px;color:var(--muted)">' + fd(it.r.t) + '</div><details class="how" style="margin:0"><summary>Caminho no bot</summary><div class="path">' + pathChips(it.r) + '</div></details></div>';
   }
   function listModal(title, subt, items) {
     var st = stats(items);
@@ -649,7 +649,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     items.forEach(function (it) { var d = it.r.t.slice(0, 10); if (!days[d]) { days[d] = []; order.push(d); } days[d].push(it); });
     var body = order.map(function (d) {
       var l = days[d], s = stats(l), rounds = {}; l.forEach(function (it) { rounds[it.round] = 1; });
-      return '<div class="tlday"><div class="tlh"><b>' + fd(d) + '</b><span class="tag">' + Object.keys(rounds).join(', ') + '</span><span style="color:var(--muted);font-size:12px">' + l.length + ' atend.' + (S.focus ? '' : ' · ' + f0(s.rate) + '% retidos') + '</span></div>' + l.map(function (it) { return '<div class="tlit"><span class="tlt">' + it.r.t.slice(11, 16) + '</span>' + itemBlock(it) + '</div>'; }).join('') + '</div>';
+      return '<div class="tlday"><div class="tlh"><b>' + fd(d) + '</b><span class="tag">' + Object.keys(rounds).join(', ') + '</span><span style="color:var(--muted);font-size:12px">' + l.length + ' atend.' + (S.focus ? '' : ' · ' + f0(s.rate) + '% retidos') + '</span></div>' + l.map(function (it) { return '<div class="tlit">' + itemBlock(it) + '</div>'; }).join('') + '</div>';
     }).join('');
     openModal('<h3>' + esc(theme) + ' · linha do tempo</h3><p class="sub" style="margin:0 0 8px">' + st.n + ' atendimento(s)' + (S.focus ? ' (' + esc(FOC[S.focus].label.toLowerCase()) + ') de ' + sf.n + ' no tema' : ' · ' + f1(sf.rate) + '% retidos · ' + sf.ticket + ' ticket(s) · ' + sf.soft + ' possível(is) retenção') + ', do mais antigo ao mais recente</p>' + dist(st, 10) + '<div class="tl">' + (body || '<p class="sub">Nenhum atendimento.</p>') + '</div>');
   }
