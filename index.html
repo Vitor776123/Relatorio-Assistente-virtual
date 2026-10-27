@@ -29,7 +29,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--text);font-size:15p
 button{font:inherit;color:inherit;cursor:pointer}
 h1,h2,h3,.disp{font-family:var(--disp);letter-spacing:.02em;margin:0;font-weight:700}
 .wrap{max-width:1180px;margin:0 auto}
-.top{background:var(--head);color:var(--head-ink);margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:18px max(16px,env(safe-area-inset-left,0px));border-bottom:3px solid var(--brand)}
+.top{background:var(--head);color:var(--head-ink);margin:24px calc(-1*max(16px,env(safe-area-inset-left,0px))) 0;padding:18px max(16px,env(safe-area-inset-left,0px));border-top:3px solid var(--brand)}
 .top .wrap{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .brand{display:flex;gap:14px;align-items:center;min-width:0}
 .mark{width:44px;height:44px;border-radius:10px;background:var(--brand);display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:26px;color:#fff;flex:none}
@@ -71,6 +71,18 @@ section h2 svg{vertical-align:-3px;color:var(--brand);margin-right:6px}
 .stat .ss{color:var(--muted);font-size:13px;margin-top:4px}
 .stat .ic{position:absolute;right:16px;top:16px;width:38px;height:38px;border-radius:9px;background:var(--soft2);display:grid;place-items:center;color:var(--muted)}
 .stat.hl{border-color:var(--ink)}
+.grid6{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.kpi{position:relative;padding:18px 18px 16px;min-height:160px;display:flex;flex-direction:column}
+.kpi .ic{position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:8px;background:var(--soft2);display:grid;place-items:center;color:var(--muted)}
+.kpi .val{font-family:var(--disp);font-weight:700;font-size:54px;line-height:1;margin-top:26px;font-variant-numeric:tabular-nums}
+.kpi .cap{font-family:var(--disp);font-weight:700;font-size:21px;line-height:1.1;text-transform:uppercase;letter-spacing:.03em;margin-top:8px}
+.kpi .ss{color:var(--muted);font-size:13px;margin-top:auto;padding-top:8px}
+.kpi.hl{border-color:var(--ink)}
+#tip{position:fixed;z-index:70;pointer-events:none;display:none;background:var(--ink);color:var(--bg);border-radius:9px;padding:8px 12px;font-size:13px;line-height:1.35;box-shadow:0 6px 20px rgba(0,0,0,.3);max-width:260px}
+#tip b{font-family:var(--disp);font-size:20px;letter-spacing:.02em}
+.dist i{transition:opacity .12s,filter .12s}
+.dist:hover i{opacity:.45}
+.dist i:hover{opacity:1;filter:brightness(1.12)}
 .trend{display:inline-flex;gap:4px;font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;margin-top:6px}
 .trend.up{background:var(--pos-bg);color:var(--pos)} .trend.dn{background:var(--neg-bg);color:var(--neg)}
 .dist{display:flex;height:16px;border-radius:99px;overflow:hidden;background:var(--soft2)}
@@ -181,14 +193,15 @@ input[type=text],select{font:inherit;color:var(--ink);background:var(--card);bor
 </head>
 <body>
 
-<div class="top"><div class="wrap">
-  <div class="brand"><div class="mark" aria-hidden="true">P</div><div><h1>Projeto Puma Assistente Virtual</h1><p>Atendimento do bot no HiBot · retenção, temas e mensagens por data de teste</p></div></div>
-  <div class="top-r"><span class="date" id="today"></span><button class="btn dark" id="btnBase" data-act="openBase" type="button">Atualizar base</button></div>
-</div></div>
 <div class="wrap">
 <main id="app"><section class="card empty"><h3 class="disp">Carregando a base de atendimentos</h3><p>Buscando a planilha mais recente.</p></section></main>
 <footer id="foot"></footer>
 </div>
+<div class="top"><div class="wrap">
+  <div class="brand"><div class="mark" aria-hidden="true">P</div><div><h1>Projeto Puma Assistente Virtual</h1><p>Atendimento do bot no HiBot · retenção, temas e mensagens por data de teste</p></div></div>
+  <div class="top-r"><span class="date" id="today"></span><button class="btn dark" id="btnBase" data-act="openBase" type="button">Atualizar base</button></div>
+</div></div>
+<div id="tip" role="tooltip"></div>
 <div class="ovl" id="ovl" role="dialog" aria-modal="true"><div class="modal" id="modal"></div></div>
 <script>
 /* ===== Lógica de dados (pura) ===== */
@@ -420,7 +433,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
   function roundStats(id) { return stats(itemsOfRound(id)); }
   function dist(st, h) {
     var n = st.n || 1;
-    return '<div class="dist" style="' + (h ? 'height:' + h + 'px' : '') + '" role="img" aria-label="Distribuição dos desfechos">' + OUTCOMES.map(function (o) { return st.out[o.key] ? '<i class="o-' + o.key + '" style="width:' + (st.out[o.key] / n * 100) + '%" title="' + esc(o.label) + ': ' + st.out[o.key] + '"></i>' : ''; }).join('') + '</div>';
+    return '<div class="dist" style="' + (h ? 'height:' + h + 'px' : '') + '" role="img" aria-label="Distribuição dos desfechos">' + OUTCOMES.map(function (o) { return st.out[o.key] ? '<i class="o-' + o.key + '" style="width:' + (st.out[o.key] / n * 100) + '%" data-tl="' + esc(o.label) + '" data-tn="' + st.out[o.key] + '" data-tp="' + f1(st.out[o.key] / n * 100) + '" data-tt="' + st.n + '"></i>' : ''; }).join('') + '</div>';
   }
   function legend(st) {
     return '<div class="legend">' + OUTCOMES.map(function (o) { return '<span><i class="dot o-' + o.key + '"></i>' + esc(o.label) + ': <b>' + f0(st.n ? st.out[o.key] / st.n * 100 : 0) + '%</b></span>'; }).join('') + '</div>';
@@ -433,7 +446,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     ret: { label: 'Retenção no chat', noun: 'retidos', one: 'retido', f: function (it) { return it.retained; }, inv: false },
     res: { label: 'Resolvido no bot', noun: 'resolvidos', one: 'resolvido', f: isRes, inv: false },
     ticket: { label: 'Tickets por e-mail', noun: 'tickets', one: 'ticket', f: function (it) { return !it.retained; }, inv: true },
-    soft: { label: 'Possível não retenção', noun: 'possíveis não retidos', one: 'possível não retido', f: isSoft, inv: true },
+    soft: { label: 'Possível retenção', noun: 'possíveis retidos', one: 'possível retido', f: isSoft, inv: true },
     nao: { label: 'Disse que não ajudou e ficou', noun: 'que não ajudaram', one: 'que não ajudou', f: function (it) { return it.out === 'nao'; }, inv: true },
     sem: { label: 'Sem avaliação final', noun: 'sem avaliação', one: 'sem avaliação', f: function (it) { return it.out === 'sem'; }, inv: true }
   };
@@ -446,7 +459,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
   function flab() { return S.focus ? FOC[S.focus].label : 'Retenção no chat'; }
   function pillFor(it) {
     var o = OUT[it.out];
-    return '<span class="pill o-' + o.key + '">' + esc(o.short) + '</span>' + (isSoft(it) ? '<span class="pill soft" title="Não foi para o e-mail, mas não confirmou que o bot resolveu. Conta como retido, porém pode não ter ajudado.">Possível não retenção</span>' : '');
+    return '<span class="pill o-' + o.key + '">' + esc(o.short) + '</span>' + (isSoft(it) ? '<span class="pill soft" title="Não foi para o e-mail, mas não confirmou que o bot resolveu. Conta como retido, porém pode não ter ajudado.">Possível retenção</span>' : '');
   }
   function pp(d, rev) { var up = rev ? d < -0.05 : d > 0.05, dn = rev ? d > 0.05 : d < -0.05; return '<span class="pp ' + (up ? 'up' : dn ? 'dn' : 'eq') + '">' + (d > 0.05 ? '▲ +' : d < -0.05 ? '▼ ' : '= ') + f1(d) + ' pp</span>'; }
 
@@ -480,20 +493,6 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
         '<div class="l2"><span><i class="dot o-sim_ajudou"></i><b>' + res + '</b> resolvido</span><span><i class="dot o-nao"></i><b>' + s.out.nao + '</b> não ajudou</span><span><i class="dot o-sem"></i><b>' + s.out.sem + '</b> sem avaliação</span><span><i class="dot o-ticket"></i><b>' + s.ticket + '</b> ticket</span><span class="rt">' + f0(s.rate) + '% ficaram no bot</span></div></button>';
     }).join('') + '</div>';
   }
-  function attention(list) {
-    var g = groupBy(list, 'theme'), arr = Object.keys(g).map(function (t) { var s = stats(g[t]); return { t: t, s: s, res: s.out.sim_encerrar + s.out.sim_ajudou }; });
-    if (!arr.length) return '';
-    var byT = arr.slice().sort(function (a, b) { return b.s.ticket - a.s.ticket || b.s.n - a.s.n; })[0];
-    var byS = arr.slice().sort(function (a, b) { return b.s.soft - a.s.soft || b.s.n - a.s.n; })[0];
-    var solid = arr.filter(function (x) { return x.s.n >= 3; });
-    var worst = solid.slice().sort(function (a, b) { return a.res / a.s.n - b.res / b.s.n; })[0], best = solid.slice().sort(function (a, b) { return b.res / b.s.n - a.res / a.s.n; })[0];
-    var c = function (cls, lab, tt, sb2) { return '<div class="att ' + cls + '"><span class="eyebrow">' + lab + '</span><b>' + esc(tt) + '</b><span>' + sb2 + '</span></div>'; };
-    return '<div class="atts">' +
-      (byT.s.ticket ? c('neg', 'Mais foi para o e-mail', byT.t, byT.s.ticket + ' de ' + byT.s.n + ' atendimentos (' + f0(pct(byT.s.ticket, byT.s.n)) + '%)') : c('ok', 'Tickets por e-mail', 'Nenhum', 'ninguém abriu ticket neste recorte')) +
-      c('warn', 'Mais possível não retenção', byS.t, byS.s.soft + ' de ' + byS.s.n + ' não ajudou ou sem avaliação (' + f0(pct(byS.s.soft, byS.s.n)) + '%)') +
-      (worst ? c('neg', 'Menor resolução confirmada', worst.t, worst.res + ' de ' + worst.s.n + ' resolvidos (' + f0(pct(worst.res, worst.s.n)) + '%)') : '') +
-      (best && best !== worst ? c('ok', 'Maior resolução confirmada', best.t, best.res + ' de ' + best.s.n + ' resolvidos (' + f0(pct(best.res, best.s.n)) + '%)') : '') + '</div>';
-  }
 
   /* ---------- seções ---------- */
   function secOverview() {
@@ -507,13 +506,6 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
         '<button class="chip ' + (all ? 'on' : '') + '" data-act="selAll" data-type="' + type + '" type="button">Todos</button>' +
         rs.map(function (r) { return '<button class="chip ' + (S.sel[r.id] ? (all ? 'sub-on' : 'on') : '') + '" data-act="selToggle" data-id="' + r.id + '" type="button">' + r.id + '</button>'; }).join('') + '</div></div>';
     }).join('');
-    var contNoTk = S.A.items.filter(function (i) { return /continuar por e-?mail/i.test(i.r.g.duvida_do_cliente || '') && !i.r.k; }).length;
-    var viaMenu = S.A.items.filter(function (i) { return i.viaMenu; }).length;
-    var att = '';
-    if (contNoTk && !S.cfg.emailContinue) att += '<li><span>' + contNoTk + ' atendimento(s) escolheram "Continuar por e-mail" mas não têm "Outras dúvidas" preenchida. Pela regra atual contam como retidos. Para contá-los como e-mail, ative a regra em Atualizar base › Regras.</span></li>';
-    if (viaMenu) att += '<li><span>' + viaMenu + ' atendimento(s) com a resposta "Sim/Não, preciso de ajuda" gravada na variável tag_duvida_do_cliente. O painel considera essa resposta como desfecho.</span></li>';
-    var inferred = S.A.items.filter(function (i) { return i.themeInferred; }).length;
-    if (inferred) att += '<li><span>' + inferred + ' atendimento(s) têm o tema definido pelo texto da mensagem inicial (as variáveis de menu podem trazer valores de atendimentos anteriores).</span></li>';
     var sv = stats(sub(items)), tag = S.focus ? ' <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">só ' + esc(FOC[S.focus].label.toLowerCase()) + '</span>' : '';
     var softPct = pct(st.soft, st.n);
     var story = '<div class="story">' +
@@ -523,26 +515,21 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
       '<div class="stp ok"><b>' + nRes + '</b><span>confirmaram que foram ajudados: retenção confirmada (' + f1(pct(nRes, st.n)) + '%)</span></div></div>';
     return '<section class="fade"><div class="sh"><div><h2>Visão geral · ' + esc(testsTxt()) + '</h2><p class="sub">Período ' + periodTxt(st) + '. Clique em um card para filtrar o restante da página.</p></div><span class="badge ' + bd[1] + '" title="Calculado pela avaliação dos clientes (quem respondeu se o bot ajudou)">' + bd[0] + '</span></div>' +
       '<div class="card filters" style="margin-bottom:14px">' + filt + '</div>' + story +
-      '<p class="steplab"><span>1</span>Resultado geral: quantos ficaram no bot e quantos foram para o e-mail</p>' +
-      '<div class="grid4">' +
-      stat('Total de atendimentos', st.n, ic('users'), Object.keys(testersNorm(items)).length + ' avaliadores · ' + scopeDays().length + ' dia(s) de teste', false, null, { k: '', on: !S.focus }) +
-      stat('Tickets por e-mail', f1(pct(st.ticket, st.n)) + '%', ic('mail'), st.ticket + ' de ' + st.n + ' foram para o e-mail: não retidos', false, null, { k: 'ticket', on: S.focus === 'ticket' }) +
-      stat('Possível retenção', f1(st.rate) + '%', ic('trend'), kept + ' de ' + st.n + ' ficaram no bot (não abriram ticket). Número bruto, não confirma ajuda', false, null, { k: 'ret', on: S.focus === 'ret' }) +
-      stat('Retenção confirmada', f1(pct(nRes, st.n)) + '%', ic('chat'), nRes + ' de ' + st.n + ' disseram "Sim". É o número oficial de quem foi ajudado', true, null, { k: 'res', on: S.focus === 'res' }) +
+      '<div class="grid6" style="margin-top:18px">' +
+      kpi('Total de atendimentos', st.n, ic('users'), Object.keys(testersNorm(items)).length + ' avaliadores · ' + scopeDays().length + ' dia(s) de teste', false, { k: '', on: !S.focus }) +
+      kpi('Tickets por e-mail', f1(pct(st.ticket, st.n)) + '%', ic('mail'), st.ticket + ' de ' + st.n + ' foram para o e-mail', false, { k: 'ticket', on: S.focus === 'ticket' }) +
+      kpi('Possível retenção', f1(st.rate) + '%', ic('trend'), kept + ' de ' + st.n + ' ficaram no bot', false, { k: 'ret', on: S.focus === 'ret' }) +
+      kpi('Retenção confirmada', f1(pct(nRes, st.n)) + '%', ic('chat'), nRes + ' de ' + st.n + ' disseram "Sim"', true, { k: 'res', on: S.focus === 'res' }) +
+      kpi('Disse que não ajudou e ficou', f1(pct(st.out.nao, st.n)) + '%', ic('mail'), st.out.nao + ' de ' + st.n + ' atendimentos', false, { k: 'nao', on: S.focus === 'nao' }) +
+      kpi('Sem avaliação final', f1(pct(st.out.sem, st.n)) + '%', ic('filter'), st.out.sem + ' de ' + st.n + ' atendimentos', false, { k: 'sem', on: S.focus === 'sem' }) +
       '</div>' +
-      '<p class="steplab"><span>2</span>Dos ' + kept + ' que ficaram no bot: o cliente foi ajudado?</p>' +
-      '<div class="grid4">' +
-      stat('Resolvido no bot', nRes, ic('chat'), f1(pct(nRes, st.n)) + '% do total · respondeu "Sim"', false, null, { k: 'res', on: S.focus === 'res' }) +
-      stat('Disse que não ajudou e ficou', st.out.nao, ic('mail'), f1(pct(st.out.nao, st.n)) + '% · não foi para o e-mail', false, null, { k: 'nao', on: S.focus === 'nao' }) +
-      stat('Sem avaliação final', st.out.sem, ic('filter'), f1(pct(st.out.sem, st.n)) + '% · saiu ou não chegou à pergunta', false, null, { k: 'sem', on: S.focus === 'sem' }) +
-      stat('Avaliaram a resposta', st.ans, ic('users'), st.ans ? f1(st.resolved) + '% disseram que ajudou (' + st.yes + ' de ' + st.ans + ')' : 'ninguém avaliou ainda') +
-      '</div>' +
-      '<div class="card clk soft-card' + (S.focus === 'soft' ? ' on' : '') + '" data-act="focus" data-k="soft" role="button" tabindex="0" style="margin-top:14px"><div><span class="pill soft">Possível não retenção</span> <b style="font-size:20px;margin-left:8px">' + st.soft + '</b> <span style="color:var(--muted)">atendimentos · ' + f1(softPct) + '%</span></div><p class="sub" style="margin:8px 0 0">É a soma de quem <b>disse que não ajudou</b> (' + st.out.nao + ') com quem ficou <b>sem avaliação final</b> (' + st.out.sem + '). Nenhum abriu ticket, então a possível retenção os conta como retidos, mas o bot não confirmou que resolveu. A verdade fica entre a retenção confirmada (' + f1(pct(nRes, st.n)) + '%) e a original (' + f1(st.rate) + '%). Fora do cálculo; use como alerta. Clique para ver só esses.</p></div>' +
+      '<div class="card clk soft-card' + (S.focus === 'soft' ? ' on' : '') + '" data-act="focus" data-k="soft" role="button" tabindex="0" style="margin-top:14px"><div><span class="pill soft">Possível retenção</span> <b style="font-size:20px;margin-left:8px">' + st.soft + '</b> <span style="color:var(--muted)">atendimentos · ' + f1(softPct) + '%</span></div><p class="sub" style="margin:8px 0 0">É a soma de quem <b>disse que não ajudou</b> (' + st.out.nao + ') com quem ficou <b>sem avaliação final</b> (' + st.out.sem + '). Nenhum abriu ticket, então a possível retenção os conta como retidos, mas o bot não confirmou que resolveu. A verdade fica entre a retenção confirmada (' + f1(pct(nRes, st.n)) + '%) e a original (' + f1(st.rate) + '%). Fora do cálculo; use como alerta. Clique para ver só esses.</p></div>' +
       '<div class="card" style="margin-top:14px"><h3>Desfecho dos atendimentos' + tag + '</h3>' + dist(sv, 18) + legend(sv) +
       (sv.ans ? '<p class="sub" style="margin-top:12px">Entre quem respondeu à pergunta "ajudou?", <b>' + f1(sv.resolved) + '%</b> disse que sim (' + sv.yes + ' de ' + sv.ans + ').</p>' : '') +
-      '<details class="how"><summary>Como cada número é calculado</summary><p><b>Possível retenção:</b> atendimentos que não foram para o e-mail (variável "Outras dúvidas", coluna BP, vazia). <b>Ticket:</b> o cliente preencheu "Outras dúvidas" e foi para o e-mail, então não foi retido. <b>Retenção confirmada (oficial):</b> atendimentos em que o cliente respondeu "Sim" à pergunta de ajuda, sobre o total. <b>Possível não retenção:</b> ficou no bot, mas disse que não ajudou ou saiu sem avaliar. A coluna "Retenção" da planilha não é usada.</p></details>' +
-      (att ? '<details class="how"><summary>Pontos de atenção na base</summary><ul class="ul" style="margin-top:8px">' + att + '</ul></details>' : '') +
       '</div></section>';
+  }
+  function kpi(cap, val, icon, sub2, hl, clk) {
+    return '<div class="card kpi' + (hl ? ' hl' : '') + (clk ? ' clk' + (clk.on ? ' on' : '') : '') + '"' + (clk ? ' data-act="focus" data-k="' + clk.k + '" role="button" tabindex="0"' : '') + '><span class="ic">' + icon + '</span><div class="val">' + esc(val) + '</div><div class="cap">' + esc(cap) + '</div><div class="ss">' + esc(sub2) + '</div></div>';
   }
   function stat(lab, val, icon, sub2, hl, trend, clk) {
     return '<div class="card stat' + (hl ? ' hl' : '') + (clk ? ' clk' + (clk.on ? ' on' : '') : '') + '"' + (clk ? ' data-act="focus" data-k="' + clk.k + '" role="button" tabindex="0"' : '') + '><span class="ic">' + icon + '</span><div class="lab">' + esc(lab) + '</div><div class="val">' + esc(val) + '</div><div class="ss">' + esc(sub2) + '</div>' +
@@ -572,25 +559,10 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     var byDay = groupBy(all, 'day');
     var rs = Object.keys(byDay).sort().map(function (d) { var l = byDay[d], t = {}; l.forEach(function (it) { t[it.round] = 1; }); return { d: d, l: l, st: stats(l), v: share(l), sn: sub(l).length, tests: Object.keys(t).join('+') }; });
     var fr = rs[0], lr = rs[rs.length - 1], ev = lr.v - fr.v, rev = inv(), L = flab(), tt = testsTxt(), tst = stats(all);
-    var cards = rs.map(function (r, i) {
-      var prev = i ? rs[i - 1].v : null, s = r.st, res = s.out.sim_encerrar + s.out.sim_ajudou;
-      return '<div class="rc"><div class="rn">' + dm(r.d) + ' <small>' + wd(r.d) + ' · ' + r.tests + '</small>' + (prev != null ? ' ' + pp(r.v - prev, rev) : '') + '</div><div class="rv">' + f1(r.v) + '%</div>' + dist(S.focus ? stats(sub(r.l)) : s, 6) +
-        '<div class="rs"><b>' + s.n + '</b> atendimentos<br>' + (S.focus ? '<b>' + r.sn + '</b> ' + (r.sn === 1 ? FOC[S.focus].one : FOC[S.focus].noun) : '<b>' + (s.n - s.ticket) + '</b> ficaram no bot · <b>' + s.ticket + '</b> ' + (s.ticket === 1 ? 'foi' : 'foram') + ' para o e-mail<br><b>' + res + '</b> resolvidos · <b>' + s.soft + '</b> possível não retenção') + '</div></div>';
-    }).join('');
-    var li = '';
-    li += '<li><span class="g">•</span><span>' + (rs.length > 1 ? 'De ' + dm(fr.d) + ' para ' + dm(lr.d) + ': <b class="' + ((rev ? -ev : ev) >= 0 ? 'g' : 'r') + '">' + (ev >= 0 ? '+' : '') + f1(ev) + ' pp</b>' : 'Só um dia de teste até agora (' + dm(fr.d) + '): a comparação aparece a partir do segundo dia.') + '</span></li>';
-    var bestD = rs.slice().sort(function (a, b) { return (rev ? -1 : 1) * (b.v - a.v); })[0], worstD = rs.slice().sort(function (a, b) { return (rev ? -1 : 1) * (a.v - b.v); })[0];
-    if (rs.length > 1) { li += '<li><span class="g">↑</span><span>Melhor dia: <b>' + dm(bestD.d) + '</b> (' + f1(bestD.v) + '%)</span></li><li><span class="r">↓</span><span>Pior dia: <b>' + dm(worstD.d) + '</b> (' + f1(worstD.v) + '%)</span></li>'; }
-    var tk = rs.slice().sort(function (a, b) { return b.st.ticket - a.st.ticket; })[0];
-    if (tk && tk.st.ticket) li += '<li><span class="r">✉</span><span>Mais tickets: <b>' + dm(tk.d) + '</b> (' + tk.st.ticket + ' de ' + tk.st.n + ' atendimentos, ' + f0(pct(tk.st.ticket, tk.st.n)) + '%)</span></li>';
-    var vol = rs.slice().sort(function (a, b) { return b.st.n - a.st.n; })[0];
-    li += '<li><span style="color:var(--ink)">#</span><span>Maior volume: <b>' + dm(vol.d) + '</b> (' + vol.st.n + ' atendimentos)</span></li>';
-    var what = !S.focus ? 'Retenção no chat = atendimentos que <b>não foram para o e-mail</b>. Cada ponto é um dia de teste: por exemplo, 66,7% quer dizer que cerca de 1 a cada 3 atendimentos daquele dia foi para o e-mail (ticket).' : 'Cada ponto mostra a parte dos atendimentos do dia que é: <b>' + esc(FOC[S.focus].label.toLowerCase()) + '</b>.';
     return '<section><div class="sh"><div><h2>' + ic('trend', 26) + ' Evolução por data de teste</h2><p class="sub">' + esc(tt) + ' · ' + L + ' dia a dia</p></div></div>' +
-      '<div class="card" style="margin-bottom:14px"><h3>' + L + ' por dia</h3><p class="sub" style="margin:2px 0 6px">' + what + '</p>' + chart(rs) + '</div>' +
-      '<div class="rcards" style="margin-bottom:14px">' + cards + '</div>' +
-      '<div class="card" style="margin-bottom:14px"><h3>' + L + ' por tema <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">' + esc(tt) + ' · ' + periodTxt(tst) + '</span></h3><p class="sub" style="margin:2px 0 10px">Cada barra mostra o que aconteceu com os atendimentos do tema. Os temas com mais tickets aparecem primeiro. Clique em um tema para ver a linha do tempo.</p>' + attention(all) + themeBlock(all, 'themeAll') + '</div>' +
-      '<div class="card"><h3>' + ic('zap', 20) + ' Resumo dos dias</h3><ul class="ul">' + li + '</ul></div></section>';
+      '<div class="card" style="margin-bottom:14px"><h3>' + L + ' por dia</h3>' + chart(rs) + '</div>' +
+      '<div class="card" style="margin-bottom:14px"><h3>' + L + ' por tema <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">' + esc(tt) + ' · ' + periodTxt(tst) + '</span></h3><p class="sub" style="margin:2px 0 10px">Cada barra mostra o que aconteceu com os atendimentos do tema. Os temas com mais tickets aparecem primeiro. Clique em um tema para ver a linha do tempo.</p>' + themeBlock(all, 'themeAll') + '</div>' +
+      '</section>';
   }
 
   function secRound() {
@@ -613,7 +585,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
       '<div class="rhead"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><h3>' + title + '</h3><span class="tag">' + Object.keys(tsts).join(' + ') + '</span><span class="badge ' + bd[1] + '" style="font-size:15px;padding:4px 14px" title="Calculado pela avaliação dos clientes">' + bd[0] + '</span></div><span class="sub" style="margin:0">Período: ' + periodTxt(st) + '</span></div>' +
       '<div class="grid4" style="margin-bottom:14px">' + stat('Atendimentos', st.n, ic('users'), Object.keys(tn).length + ' avaliadores') + stat(flab(), f1(share(items)) + '%', ic('trend'), S.focus ? sb.length + ' ' + noun + ' de ' + st.n : (st.n - st.ticket) + ' ficaram no bot · ' + st.ticket + ' tickets · ' + nRes + ' resolvidos', true) +
       '<div class="card span2"><div class="lab" style="font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px">Distribuição' + (S.focus ? ' (' + esc(FOC[S.focus].label.toLowerCase()) + ')' : '') + '</div>' + dist(sbs, 14) + legend(sbs) + '</div></div>' +
-      '<div class="card themes" style="margin-bottom:14px"><h3>Temas que pedem atenção <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">clique em um tema para detalhes</span></h3>' + attention(items) + themeBlock(items, 'theme') + '</div>' +
+      '<div class="card themes" style="margin-bottom:14px"><h3>Temas que pedem atenção <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">clique em um tema para detalhes</span></h3>' + themeBlock(items, 'theme') + '</div>' +
       '<div class="card"><h3>Avaliadores <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">' + (testers ? testers.split('data-act="tester"').length - 1 : 0) + '</span></h3><div class="scroll">' + (testers || '<p class="sub">Nenhum atendimento neste filtro.</p>') + '</div></div></section>';
   }
 
@@ -624,7 +596,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     var base = sub(all).filter(function (it) { if (S.cm.day && it.day !== S.cm.day) return false; return it.msg || it.r.k; });
     var f = { all: function () { return true; }, res: isRes, soft: isSoft, nao: function (it) { return it.out === 'nao'; }, sem: function (it) { return it.out === 'sem'; }, ticket: function (it) { return !it.retained; } };
     var cnt = {}; Object.keys(f).forEach(function (k) { cnt[k] = base.filter(f[k]).length; });
-    var lab = { all: 'Todos', res: 'Resolvidos', soft: 'Possível não retenção', nao: 'Não ajudou e ficou', sem: 'Sem avaliação final', ticket: 'Ticket por e-mail' };
+    var lab = { all: 'Todos', res: 'Resolvidos', soft: 'Possível retenção', nao: 'Não ajudou e ficou', sem: 'Sem avaliação final', ticket: 'Ticket por e-mail' };
     var chips = Object.keys(lab).map(function (k) { return '<button class="chip ' + (S.cm.out === k ? 'on' : '') + '" data-act="cmOut" data-k="' + k + '" type="button">' + lab[k] + '<small>(' + cnt[k] + ')</small></button>'; }).join('');
     var list = base.filter(f[S.cm.out]).sort(function (a, b) { return a.r.t < b.r.t ? 1 : -1; });
     var shown = list.slice(0, S.cm.limit);
@@ -653,7 +625,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     var app = $('app');
     app.innerHTML = (S.A.items.length ? focusBar() : '') + (S.A.items.length ? secOverview() + secEvolution() + secRound() + secMessages() : secEmpty());
     var m = S.meta;
-    $('foot').innerHTML = 'Projeto Puma Assistente Virtual · ' + (m ? 'Base: ' + esc(m.fileName || 'planilha') + ' · ' + m.count + ' atendimentos · enviada em ' + esc(fdt((m.uploadedAt || '').slice(0, 16).replace(' ', 'T'))) : S.A.items.length ? 'Base carregada neste navegador (não salva)' : 'Sem base') + (S.static && S.fromLocal ? ' · salva só neste navegador' : '');
+    $('foot').innerHTML = (m ? 'Base: ' + esc(m.fileName || 'planilha') + ' · ' + m.count + ' atendimentos · enviada em ' + esc(fdt((m.uploadedAt || '').slice(0, 16).replace(' ', 'T'))) : S.A.items.length ? 'Base carregada neste navegador (não salva)' : 'Sem base') + (S.static && S.fromLocal ? ' · salva só neste navegador' : '');
   }
 
   /* ---------- modais ---------- */
@@ -681,7 +653,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
       var l = days[d], s = stats(l), rounds = {}; l.forEach(function (it) { rounds[it.round] = 1; });
       return '<div class="tlday"><div class="tlh"><b>' + fd(d) + '</b><span class="tag">' + Object.keys(rounds).join(', ') + '</span><span style="color:var(--muted);font-size:12px">' + l.length + ' atend.' + (S.focus ? '' : ' · ' + f0(s.rate) + '% retidos') + '</span></div>' + l.map(function (it) { return '<div class="tlit"><span class="tlt">' + it.r.t.slice(11, 16) + '</span>' + itemBlock(it) + '</div>'; }).join('') + '</div>';
     }).join('');
-    openModal('<h3>' + esc(theme) + ' · linha do tempo</h3><p class="sub" style="margin:0 0 8px">' + st.n + ' atendimento(s)' + (S.focus ? ' (' + esc(FOC[S.focus].label.toLowerCase()) + ') de ' + sf.n + ' no tema' : ' · ' + f1(sf.rate) + '% retidos · ' + sf.ticket + ' ticket(s) · ' + sf.soft + ' possível(is) não retenção') + ', do mais antigo ao mais recente</p>' + dist(st, 10) + '<div class="tl">' + (body || '<p class="sub">Nenhum atendimento.</p>') + '</div>');
+    openModal('<h3>' + esc(theme) + ' · linha do tempo</h3><p class="sub" style="margin:0 0 8px">' + st.n + ' atendimento(s)' + (S.focus ? ' (' + esc(FOC[S.focus].label.toLowerCase()) + ') de ' + sf.n + ' no tema' : ' · ' + f1(sf.rate) + '% retidos · ' + sf.ticket + ' ticket(s) · ' + sf.soft + ' possível(is) retenção') + ', do mais antigo ao mais recente</p>' + dist(st, 10) + '<div class="tl">' + (body || '<p class="sub">Nenhum atendimento.</p>') + '</div>');
   }
 
   /* ---------- base de dados ---------- */
@@ -862,6 +834,23 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     if (t.id === 'pendTest') { S.pendTest = t.value; S.pendMap = {}; baseModal(); }
     else if (t.classList && t.classList.contains('pdate')) { var dd = t.getAttribute('data-d'); if (t.value === S.pendTest) delete S.pendMap[dd]; else S.pendMap[dd] = t.value; baseModal(); }
   });
+  /* tooltip das barras de desfecho */
+  var tipEl = $('tip');
+  function tipShow(seg, x, y) {
+    var n = +seg.getAttribute('data-tn'), tot = +seg.getAttribute('data-tt');
+    tipEl.innerHTML = esc(seg.getAttribute('data-tl')) + '<br><b>' + n + '</b> de ' + tot + ' atendimento' + (tot === 1 ? '' : 's') + ' · <b>' + seg.getAttribute('data-tp') + '%</b>';
+    tipEl.style.display = 'block';
+    var w = tipEl.offsetWidth, h = tipEl.offsetHeight, nx = x + 14, ny = y - h - 12;
+    if (nx + w > window.innerWidth - 8) nx = x - w - 14;
+    if (nx < 8) nx = 8;
+    if (ny < 8) ny = y + 18;
+    tipEl.style.left = nx + 'px'; tipEl.style.top = ny + 'px';
+  }
+  function tipHide() { tipEl.style.display = 'none'; }
+  document.addEventListener('mousemove', function (e) { var seg = e.target.closest && e.target.closest('.dist i[data-tn]'); if (seg) tipShow(seg, e.clientX, e.clientY); else tipHide(); });
+  document.addEventListener('mouseleave', tipHide);
+  document.addEventListener('touchstart', function (e) { var seg = e.target.closest && e.target.closest('.dist i[data-tn]'); if (seg && e.touches[0]) tipShow(seg, e.touches[0].clientX, e.touches[0].clientY); else tipHide(); }, { passive: true });
+  document.addEventListener('scroll', tipHide, true);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); else if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('clk')) { e.preventDefault(); e.target.click(); } });
   $('today').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
