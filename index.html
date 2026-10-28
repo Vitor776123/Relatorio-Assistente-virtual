@@ -71,7 +71,7 @@ section h2 svg{vertical-align:-3px;color:var(--brand);margin-right:6px}
 .stat .ss{color:var(--muted);font-size:13px;margin-top:4px}
 .stat .ic{position:absolute;right:16px;top:16px;width:38px;height:38px;border-radius:9px;background:var(--soft2);display:grid;place-items:center;color:var(--muted)}
 .stat.hl{border-color:var(--ink)}
-#tip{position:fixed;z-index:70;pointer-events:none;display:none;background:var(--ink);color:var(--bg);border-radius:9px;padding:8px 12px;font-size:13px;line-height:1.35;box-shadow:0 6px 20px rgba(0,0,0,.3);max-width:260px}
+#tip{position:fixed;z-index:70;pointer-events:none;display:none;background:var(--ink);color:var(--bg);border-radius:9px;padding:8px 12px;font-size:13px;line-height:1.35;box-shadow:0 6px 20px rgba(0,0,0,.3);max-width:300px}
 #tip b{font-family:var(--disp);font-size:20px;letter-spacing:.02em}
 .dist i{transition:opacity .12s,filter .12s}
 .dist:hover i{opacity:.45}
@@ -90,6 +90,8 @@ details.how p{margin:8px 0 0;max-width:80ch}
 .note{display:flex;gap:10px;background:var(--warn-bg);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:13px;margin-top:12px}
 .chartwrap{overflow-x:auto}
 svg text{fill:var(--muted);font-family:var(--text);font-size:12px}
+.hit{fill:transparent}.hit:hover{fill:var(--ink);fill-opacity:.07}
+#tip hr{border:0;border-top:1px solid currentColor;opacity:.25;margin:7px 0}#tip .tsub{opacity:.75;font-size:12px;padding-left:12px}
 .rcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
 .rc{padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card)}
 .rc .rn{font-family:var(--disp);font-weight:700;font-size:20px} .rc .rn span{color:var(--brand)}
@@ -557,6 +559,20 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
   }
   function testersNorm(items) { var m = {}; items.forEach(function (it) { var k = it.r.n.trim().toLowerCase(); (m[k] = m[k] || []).push(it); }); return m; }
 
+  /* relatório que aparece ao passar o mouse sobre um dia do gráfico */
+  function dayTip(r, prev) {
+    var st = r.st, nRes = st.out.sim_encerrar + st.out.sim_ajudou, cnt = S.focus ? r.sn : st.n - st.ticket, delta = prev ? r.v - prev.v : null;
+    var row = function (name, n) { return '<br>' + name + ': <b>' + n + '</b> · ' + f1(pct(n, st.n)) + '%'; };
+    var subl = function (t) { return '<br><span class="tsub">' + t + '</span>'; };
+    return '<b>' + dm(r.d) + ' · ' + wd(r.d) + ' · ' + esc(r.tests) + '</b>' +
+      '<br>' + esc(flab()) + ': <b>' + f1(r.v) + '%</b> (' + cnt + ' de ' + st.n + ')' +
+      (delta != null ? '<br><span class="tsub">' + (delta > 0.05 ? '▲ +' : delta < -0.05 ? '▼ ' : '= ') + f1(delta) + ' pp em relação ao dia anterior</span>' : '') +
+      '<br>Atendimentos: <b>' + st.n + '</b> · avaliadores: <b>' + Object.keys(testersNorm(r.l)).length + '</b>' +
+      '<hr>' + row('Possível retenção', st.soft) + subl('disseram que não ajudou: ' + st.out.nao) + subl('sem avaliação final: ' + st.out.sem) +
+      row('Foram para a inbox', st.ticket) +
+      row('Retenção confirmada', nRes) + simsList(st).map(function (x) { return subl('“' + esc(x[0]) + '”: ' + x[1]); }).join('') +
+      '<hr>Possível retenção + inbox + confirmada = <b>' + st.n + '</b>';
+  }
   function chart(rs) {
     var W = 760, H = rs.length === 1 ? 230 : 290, pl = 46, pr = 30, pt = 26, pb = 54, vals = rs.map(function (r) { return r.v; });
     var lo, hi;
@@ -572,12 +588,15 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
       var c = r.st.rate >= 90 ? 'var(--pos)' : r.st.rate >= 75 ? 'var(--warn)' : 'var(--neg)', last = i === rs.length - 1;
       return '<circle cx="' + X(i) + '" cy="' + Y(r.v) + '" r="' + (last ? 7 : 5) + '" style="fill:' + c + ';stroke:var(--card)" stroke-width="2"/><text x="' + X(i) + '" y="' + (Y(r.v) - 12) + '" text-anchor="middle" style="fill:var(--ink);font-weight:600">' + f1(r.v) + '%</text><text x="' + X(i) + '" y="' + (H - 28) + '" text-anchor="middle" style="fill:var(--ink);font-weight:600">' + dm(r.d) + '</text><text x="' + X(i) + '" y="' + (H - 12) + '" text-anchor="middle">' + wd(r.d) + ' · ' + r.tests + '</text>';
     }).join('');
-    return '<div class="chartwrap"><svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="min-width:420px;max-width:100%" role="img" aria-label="' + esc(flab()) + ' por dia de teste">' + g + area + dots + '</svg></div>';
+    var colW = rs.length === 1 ? W - pl - pr : (W - pl - pr - 40) / (rs.length - 1);
+    var hits = rs.map(function (r) { var i = rs.indexOf(r), x = Math.max(0, X(i) - colW / 2), w = Math.min(W, X(i) + colW / 2) - x; return '<rect class="hit" x="' + x + '" y="0" width="' + w + '" height="' + H + '" data-tip="' + esc(r.tip) + '"/>'; }).join('');
+    return '<div class="chartwrap"><svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="min-width:420px;max-width:100%" role="img" aria-label="' + esc(flab()) + ' por dia de teste">' + g + area + dots + hits + '</svg></div>';
   }
   function secEvolution() {
     var all = SC(); if (!all.length) return '';
     var byDay = groupBy(all, 'day');
     var rs = Object.keys(byDay).sort().map(function (d) { var l = byDay[d], t = {}; l.forEach(function (it) { t[it.round] = 1; }); return { d: d, l: l, st: stats(l), v: share(l), sn: sub(l).length, tests: Object.keys(t).join('+') }; });
+    rs.forEach(function (r, i) { r.tip = dayTip(r, i ? rs[i - 1] : null); });
     var fr = rs[0], lr = rs[rs.length - 1], ev = lr.v - fr.v, rev = inv(), L = flab(), tt = testsTxt(), tst = stats(all);
     return '<section><div class="sh"><div><h2>' + ic('trend', 26) + ' Evolução por data de teste</h2><p class="sub">' + esc(tt) + ' · ' + L + ' dia a dia</p></div></div>' +
       '<div class="card" style="margin-bottom:14px"><h3>' + L + ' por dia</h3>' + chart(rs) + '</div>' +
