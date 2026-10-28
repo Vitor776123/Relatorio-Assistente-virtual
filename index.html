@@ -153,7 +153,7 @@ input[type=text],select{font:inherit;color:var(--ink);background:var(--card);bor
 .clk{cursor:pointer;transition:box-shadow .15s,transform .15s}.clk:hover{box-shadow:0 0 0 2px var(--line),0 6px 18px rgba(0,0,0,.08)}.clk:focus-visible{outline:2px solid var(--brand);outline-offset:2px}.clk.on{box-shadow:0 0 0 2px var(--brand)}
 .pill.soft{background:transparent;border:1px dashed var(--warn);color:var(--warn)}
 .soft-card{display:block}
-.fbar{position:sticky;top:8px;z-index:20;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:14px}.fbar .btn{padding:6px 12px;color:#111;background:#fff;border-color:#fff}
+.fbar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(1148px,calc(100% - 32px));z-index:40;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:14px}.fbar .btn{padding:6px 12px;color:#111;background:#fff;border-color:#fff}
 .clkrow{cursor:pointer;font:inherit;color:inherit}.clkrow:hover{background:var(--soft2)}.go{color:var(--muted);margin-left:4px}
 .tl{margin-top:14px;border-left:2px solid var(--line);padding-left:16px;display:grid;gap:18px}
 .tlday{position:relative}.tlday:before{content:"";position:absolute;left:-23px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 3px var(--card)}
@@ -185,7 +185,8 @@ input[type=text],select{font:inherit;color:var(--ink);background:var(--card);bor
 .dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:10px}.dgrid label{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:13px}
 .dgrid select,.f select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 @media (max-width:560px){.top h1{font-size:24px}section h2{font-size:28px}.stat .val{font-size:46px}.flab{min-width:100%}}
-@media (prefers-reduced-motion:no-preference){.fade{animation:fd .35s ease-out}@keyframes fd{from{opacity:.0;transform:translateY(6px)}to{opacity:1;transform:none}}}
+body.hasfocus{padding-bottom:84px}
+@media (prefers-reduced-motion:no-preference){.fbar{animation:fbin .22s ease-out}@keyframes fbin{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}.dist i{transition:opacity .12s,filter .12s,width .45s cubic-bezier(.2,.7,.2,1)}.stp,.stat,.th,.cm,.rc,.chip,.rtab{transition:border-color .2s,box-shadow .2s,background-color .2s,color .2s}.fade{animation:fd .35s ease-out}@keyframes fd{from{opacity:.0;transform:translateY(6px)}to{opacity:1;transform:none}}}
 </style>
 </head>
 <body>
@@ -316,7 +317,7 @@ function themeOf(rec) {
 /* desfecho: ticket | sim_encerrar | sim_ajudou | defeito | nao | sem */
 var OUTCOMES = [
   { key: 'sim_encerrar', label: 'Resolvido: sim, pode encerrar', short: 'Resolvido', tone: 'pos2' },
-  { key: 'sim_ajudou', label: 'Resolvido: sim, ajudou ou esclareceu', short: 'Ajudou', tone: 'pos1' },
+  { key: 'sim_ajudou', label: 'Resolvido: sim, ajudou, esclareceu ou encontrei', short: 'Ajudou', tone: 'pos1' },
   { key: 'sem', label: 'Sem avaliação final', short: 'Sem avaliação', tone: 'neu' },
   { key: 'nao', label: 'Disse que não ajudou e ficou', short: 'Não ajudou', tone: 'warn' },
   { key: 'ticket', label: 'Abriu ticket na inbox', short: 'Ticket', tone: 'neg' }
@@ -334,12 +335,14 @@ function outcomeOf(rec, cfg) {
   if (rec.k) return { key: 'ticket', via: 'outras_duvidas' };
   for (var gk in rec.g) if (/^ajuda com defeito$/i.test(rec.g[gk])) return { key: 'ticket', via: 'ajuda_defeito' };
   if (cfg && cfg.emailContinue && rec.g.duvida_do_cliente && /continuar por e-?mail/i.test(rec.g.duvida_do_cliente)) return { key: 'ticket', via: 'continuar_email' };
-  var ans = null, k;
-  for (k in rec.g) if (/^(ajudou|encontrou_o_produto)/.test(k)) { var c = classifyAnswer(rec.g[k]); if (c) ans = c; }
+  var ans = null, raw = '', k;
+  for (k in rec.g) if (/^(ajudou|encontrou_o_produto)/.test(k)) { var c = classifyAnswer(rec.g[k]); if (c) { ans = c; raw = rec.g[k]; } }
   var viaMenu = false;
-  if (!ans) { var a2 = classifyAnswer(rec.g.duvida_do_cliente); if (a2) { ans = a2; viaMenu = true; } }
-  return { key: ans || 'sem', viaMenu: viaMenu };
+  if (!ans) { var a2 = classifyAnswer(rec.g.duvida_do_cliente); if (a2) { ans = a2; viaMenu = true; raw = rec.g.duvida_do_cliente; } }
+  return { key: ans || 'sem', viaMenu: viaMenu, raw: raw };
 }
+/* texto exato da resposta ("Sim, pode encerrar", "Sim, ajudou", "Sim, esclareceu"...) */
+function simLabel(raw) { var t = String(raw == null ? '' : raw).replace(/\s*\n\s*/g, ' ').replace(/ {2,}/g, ', ').replace(/\s*,\s*/g, ', ').trim(); return t ? t.charAt(0).toUpperCase() + t.slice(1) : ''; }
 
 function msgOf(rec) { return rec.g.intencao_inicial || rec.g.motivo_contato || rec.g.motivo_contato1 || ''; }
 
@@ -364,7 +367,7 @@ function analyze(records, cfg) {
   cfg = cfg || {};
   var items = records.map(function (r) {
     var o = outcomeOf(r, cfg), th = themeOf(r), day = r.t.slice(0, 10), test = testOf(day, cfg);
-    return { r: r, day: day, round: test, type: /^TUC/.test(test) ? 'TUC' : 'TU', theme: th.t, themeInferred: th.inferred, out: o.key, via: o.via, viaMenu: o.viaMenu, msg: msgOf(r), retained: o.key !== 'ticket' };
+    return { r: r, day: day, round: test, type: /^TUC/.test(test) ? 'TUC' : 'TU', theme: th.t, themeInferred: th.inferred, out: o.key, ans: o.raw, via: o.via, viaMenu: o.viaMenu, msg: msgOf(r), retained: o.key !== 'ticket' };
   });
   var tests = {}, days = {};
   items.forEach(function (it) { tests[it.round] = it.type; days[it.day] = true; });
@@ -374,13 +377,13 @@ function analyze(records, cfg) {
 }
 
 function stats(list) {
-  var s = { n: list.length, ret: 0, ticket: 0, out: {}, testers: {}, from: null, to: null, ans: 0, yes: 0, soft: 0 };
+  var s = { n: list.length, ret: 0, ticket: 0, out: {}, sims: {}, testers: {}, from: null, to: null, ans: 0, yes: 0, soft: 0 };
   OUTCOMES.forEach(function (o) { s.out[o.key] = 0; });
   list.forEach(function (it) {
     s.out[it.out]++;
     if (it.retained) s.ret++; else s.ticket++;
     if (it.out === 'nao' || it.out === 'sem') s.soft++;
-    if (it.out === 'sim_encerrar' || it.out === 'sim_ajudou') { s.ans++; s.yes++; } else if (it.out === 'nao') s.ans++;
+    if (it.out === 'sim_encerrar' || it.out === 'sim_ajudou') { s.ans++; s.yes++; var sl = simLabel(it.ans) || 'Sim'; s.sims[sl] = (s.sims[sl] || 0) + 1; } else if (it.out === 'nao') s.ans++;
     var d = it.r.t.slice(0, 10);
     if (!s.from || d < s.from) s.from = d; if (!s.to || d > s.to) s.to = d;
     s.testers[it.r.n] = (s.testers[it.r.n] || 0) + 1;
@@ -422,6 +425,12 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     if (S.tab !== 'all' && S.A.days.indexOf(S.tab) < 0) S.tab = 'all';
     if (S.cm.day && S.A.days.indexOf(S.cm.day) < 0) S.cm.day = null;
   }
+  function keepScope() {
+    var days = {}; S.A.items.forEach(function (it) { if (S.sel[it.round]) days[it.day] = 1; });
+    if (S.tab !== 'all' && !days[S.tab]) S.tab = 'all';
+    if (S.cm.day && !days[S.cm.day]) S.cm.day = null;
+    S.cm.limit = 40;
+  }
   var TEST_OPTS = ['TU1', 'TU2', 'TU3', 'TU4', 'TU5', 'TU6', 'TUC1', 'TUC2', 'TUC3', 'TUC4'];
   function normCfg(c) { c = c || {}; return { defaultTest: String(c.defaultTest || 'TU1').toUpperCase(), testMap: c.testMap || {}, emailContinue: !!c.emailContinue }; }
   function testSel(attrs, val) { var o = TEST_OPTS.slice(); if (o.indexOf(val) < 0) o.push(val); return '<select ' + attrs + '>' + o.map(function (t) { return '<option value="' + t + '"' + (t === val ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>'; }
@@ -429,9 +438,24 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
   function roundsOf(type) { return S.A.rounds.filter(function (r) { return r.type === type; }); }
   function itemsOfRound(id) { return S.A.items.filter(function (it) { return it.round === id; }); }
   function roundStats(id) { return stats(itemsOfRound(id)); }
+  /* lista [rótulo, qtd] dos "Sim" de um recorte; key filtra por sim_encerrar / sim_ajudou */
+  function simsList(st, key) {
+    return Object.keys(st.sims || {}).filter(function (l) { return !key || classifyAnswer(l) === key; }).sort(function (a, b) { return st.sims[b] - st.sims[a]; }).map(function (l) { return [l, st.sims[l]]; });
+  }
+  function joinPt(a) { return a.length < 2 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' e ' + a[a.length - 1]; }
+  function simsText(st) { return joinPt(simsList(st).map(function (x) { return x[1] + ' “' + x[0] + '”'; })); }
+  function simsTip(st, title) {
+    var l = simsList(st), tot = l.reduce(function (a, x) { return a + x[1]; }, 0);
+    return '<b>' + esc(title) + '</b>' + l.map(function (x) { return '<br>“' + esc(x[0]) + '”: <b>' + x[1] + '</b> · ' + f1(pct(x[1], st.n)) + '% do total'; }).join('') + '<br>Total: <b>' + tot + '</b> de ' + st.n + ' · ' + f1(pct(tot, st.n)) + '%';
+  }
   function dist(st, h) {
     var n = st.n || 1;
-    return '<div class="dist" style="' + (h ? 'height:' + h + 'px' : '') + '" role="img" aria-label="Distribuição dos desfechos">' + OUTCOMES.map(function (o) { return st.out[o.key] ? '<i class="o-' + o.key + '" style="width:' + (st.out[o.key] / n * 100) + '%" data-tl="' + esc(o.label) + '" data-tn="' + st.out[o.key] + '" data-tp="' + f1(st.out[o.key] / n * 100) + '" data-tt="' + st.n + '"></i>' : ''; }).join('') + '</div>';
+    return '<div class="dist" style="' + (h ? 'height:' + h + 'px' : '') + '" role="img" aria-label="Distribuição dos desfechos">' + OUTCOMES.map(function (o) {
+      var c = st.out[o.key]; if (!c) return '';
+      var subs = (o.key === 'sim_encerrar' || o.key === 'sim_ajudou') ? simsList(st, o.key) : [];
+      var tip = esc(o.label) + '<br><b>' + c + '</b> de ' + st.n + ' atendimento' + (st.n === 1 ? '' : 's') + ' · <b>' + f1(c / n * 100) + '%</b>' + (subs.length > 1 ? subs.map(function (x) { return '<br>• “' + esc(x[0]) + '”: <b>' + x[1] + '</b>'; }).join('') : '');
+      return '<i class="o-' + o.key + '" style="width:' + (c / n * 100) + '%" data-tip="' + esc(tip) + '"></i>';
+    }).join('') + '</div>';
   }
   function legend(st) {
     return '<div class="legend">' + OUTCOMES.map(function (o) { return '<span><i class="dot o-' + o.key + '"></i>' + esc(o.label) + ': <b>' + f0(st.n ? st.out[o.key] / st.n * 100 : 0) + '%</b></span>'; }).join('') + '</div>';
@@ -497,31 +521,28 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     var sel = S.A.rounds.filter(function (r) { return S.sel[r.id]; });
     var items = SC(), st = stats(items), bd = badgeFor(st);
     var nRes = st.out.sim_encerrar + st.out.sim_ajudou, kept = st.n - st.ticket;
-    var filt = ['TU', 'TUC'].map(function (type) {
-      var rs = roundsOf(type); if (!rs.length) return '';
-      var all = rs.every(function (r) { return S.sel[r.id]; });
-      return '<div class="frow"><div class="flab">' + ic(type === 'TUC' ? 'team' : 'flask', 16) + '<span>Teste ' + type + ':</span></div><div class="chips">' +
-        '<button class="chip ' + (all ? 'on' : '') + '" data-act="selAll" data-type="' + type + '" type="button">Todos</button>' +
-        rs.map(function (r) { return '<button class="chip ' + (S.sel[r.id] ? (all ? 'sub-on' : 'on') : '') + '" data-act="selToggle" data-id="' + r.id + '" type="button">' + r.id + '</button>'; }).join('') + '</div></div>';
-    }).join('');
+    var allSel = S.A.rounds.every(function (r) { return S.sel[r.id]; }), tps = ['TU', 'TUC'].filter(function (t) { return roundsOf(t).length; });
+    var filt = '<div class="frow"><div class="flab">' + ic('flask', 16) + '<span>Teste ' + tps.join(' / ') + ':</span></div><div class="chips">' +
+      '<button class="chip ' + (allSel ? 'on' : '') + '" data-act="selAll" type="button">Todos</button>' +
+      S.A.rounds.map(function (r) { return '<button class="chip ' + (!allSel && S.sel[r.id] ? 'on' : '') + '" data-act="selOne" data-id="' + r.id + '" type="button">' + r.id + '</button>'; }).join('') + '</div></div>';
     var sv = stats(sub(items)), tag = S.focus ? ' <span class="tag" style="font-family:var(--text);text-transform:none;letter-spacing:0;vertical-align:middle">só ' + esc(FOC[S.focus].label.toLowerCase()) + '</span>' : '';
     var softPct = pct(st.soft, st.n);
     var stp = function (cls, val, cap, small, clk) {
-      return '<div class="stp clk ' + cls + (clk.on ? ' on' : '') + '" data-act="focus" data-k="' + clk.k + '" role="button" tabindex="0"><b>' + esc(val) + '</b><span class="cap">' + esc(cap) + '</span><span class="sm">' + esc(small) + '</span></div>';
+      return '<div class="stp clk ' + cls + (clk.on ? ' on' : '') + '" data-act="focus" data-k="' + clk.k + '"' + (clk.tip ? ' data-tip="' + esc(clk.tip) + '"' : '') + ' role="button" tabindex="0"><b>' + esc(val) + '</b><span class="cap">' + esc(cap) + '</span><span class="sm">' + esc(small) + '</span></div>';
     };
     var arr = '<i class="arr">→</i>';
     var merged = '<div class="story big">' +
       stp('', st.n, 'atendimentos no total', Object.keys(testersNorm(items)).length + ' avaliadores · ' + scopeDays().length + ' dia(s) de teste', { k: '', on: !S.focus }) + arr +
       stp('', f1(pct(st.soft, st.n)) + '%', 'ficaram no bot sem confirmar: possível retenção', st.soft + ' de ' + st.n + ' · disseram que não ajudou ou saíram sem avaliação final', { k: 'soft', on: S.focus === 'soft' }) + arr +
       stp('neg', f1(pct(st.ticket, st.n)) + '%', 'foram para a inbox', st.ticket + ' de ' + st.n + ' · não retidos', { k: 'ticket', on: S.focus === 'ticket' }) + arr +
-      stp('ok', f1(pct(nRes, st.n)) + '%', 'confirmaram que foram ajudados: retenção confirmada', nRes + ' de ' + st.n + ' disseram "Sim" · número oficial', { k: 'res', on: S.focus === 'res' }) + '</div>' +
+      stp('ok', f1(pct(nRes, st.n)) + '%', 'confirmaram que foram ajudados: retenção confirmada', nRes + ' de ' + st.n + ' disseram "Sim": ' + simsText(st) + '. Número oficial.', { k: 'res', on: S.focus === 'res', tip: simsTip(st, 'Retenção confirmada: quem disse "Sim"') }) + '</div>' +
       '<p class="sub" style="margin:10px 0 0">Possível retenção + inbox + retenção confirmada = 100% dos atendimentos (' + st.soft + ' + ' + st.ticket + ' + ' + nRes + ' = ' + st.n + ').</p>';
     return '<section class="fade"><div class="sh"><div><h2>Visão geral · ' + esc(testsTxt()) + '</h2><p class="sub">Período ' + periodTxt(st) + '. Clique em um card para filtrar o restante da página.</p></div><span class="badge ' + bd[1] + '" title="Calculado pela avaliação dos clientes (quem respondeu se o bot ajudou)">' + bd[0] + '</span></div>' +
       '<div class="card filters" style="margin-bottom:14px">' + filt + '</div>' +
       '<p class="steplab"><span>1</span>Resultado geral: quantos ficaram no bot e quantos foram para a inbox</p>' + merged +
       '<p class="steplab"><span>2</span>Dos ' + kept + ' que ficaram no bot: o cliente foi ajudado?</p>' +
       '<div class="grid4">' +
-      stat('Resolvido no bot', nRes, ic('chat'), nRes + ' responderam sim (' + st.out.sim_encerrar + ' “sim, pode encerrar” e ' + st.out.sim_ajudou + ' “sim, ajudou ou esclareceu”)', false, null, { k: 'res', on: S.focus === 'res' }) +
+      stat('Resolvido no bot', nRes, ic('chat'), nRes + ' responderam sim: ' + simsText(st), false, null, { k: 'res', on: S.focus === 'res', tip: simsTip(st, 'Resolvido no bot: quem disse "Sim"') }) +
       stat('Disse que não ajudou e ficou', st.out.nao, ic('mail'), f1(pct(st.out.nao, st.n)) + '% · não foi para a inbox', false, null, { k: 'nao', on: S.focus === 'nao' }) +
       stat('Sem avaliação final', st.out.sem, ic('filter'), f1(pct(st.out.sem, st.n)) + '% · saiu ou não chegou à pergunta', false, null, { k: 'sem', on: S.focus === 'sem' }) +
       '</div>' +
@@ -531,7 +552,7 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
       '</div></section>';
   }
   function stat(lab, val, icon, sub2, hl, trend, clk) {
-    return '<div class="card stat' + (hl ? ' hl' : '') + (clk ? ' clk' + (clk.on ? ' on' : '') : '') + '"' + (clk ? ' data-act="focus" data-k="' + clk.k + '" role="button" tabindex="0"' : '') + '><span class="ic">' + icon + '</span><div class="lab">' + esc(lab) + '</div><div class="val">' + esc(val) + '</div><div class="ss">' + esc(sub2) + '</div>' +
+    return '<div class="card stat' + (hl ? ' hl' : '') + (clk ? ' clk' + (clk.on ? ' on' : '') : '') + '"' + (clk ? ' data-act="focus" data-k="' + clk.k + '"' + (clk.tip ? ' data-tip="' + esc(clk.tip) + '"' : '') + ' role="button" tabindex="0"' : '') + '><span class="ic">' + icon + '</span><div class="lab">' + esc(lab) + '</div><div class="val">' + esc(val) + '</div><div class="ss">' + esc(sub2) + '</div>' +
       (trend != null ? '<span class="trend ' + (trend >= 0 ? 'up' : 'dn') + '">' + (trend >= 0 ? '▲ +' : '▼ ') + f1(trend) + ' pp</span>' : '') + '</div>';
   }
   function testersNorm(items) { var m = {}; items.forEach(function (it) { var k = it.r.n.trim().toLowerCase(); (m[k] = m[k] || []).push(it); }); return m; }
@@ -620,9 +641,31 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     var n = sub(S.A.items.filter(function (it) { return S.sel[it.round]; })).length;
     return '<div class="fbar" role="status"><span>Filtro ativo: <b>' + esc(FOC[S.focus].label) + '</b> · ' + n + ' atendimento(s). Evolução, análise por data e mensagens mostram só esse grupo.</span><button class="btn" data-act="focus" data-k="" type="button">Limpar filtro</button></div>';
   }
+  /* atualização "inteligente" do DOM: compara a tela atual com a nova e altera só as diferenças.
+     Assim nada pisca, o scroll não pula, a animação de entrada não reinicia e as barras deslizam até o novo valor. */
+  function syncAttrs(a, b) {
+    var i, n;
+    for (i = a.attributes.length - 1; i >= 0; i--) { n = a.attributes[i].name; if (!b.hasAttribute(n)) a.removeAttribute(n); }
+    for (i = 0; i < b.attributes.length; i++) { n = b.attributes[i].name; if (a.getAttribute(n) !== b.attributes[i].value) a.setAttribute(n, b.attributes[i].value); }
+  }
+  function syncNode(a, b) {
+    if (a.nodeType !== b.nodeType || a.nodeName !== b.nodeName) { a.parentNode.replaceChild(b.cloneNode(true), a); return; }
+    if (a.nodeType === 3) { if (a.nodeValue !== b.nodeValue) a.nodeValue = b.nodeValue; return; }
+    if (a.nodeType !== 1) return;
+    syncAttrs(a, b); syncKids(a, b);
+  }
+  function syncKids(a, b) {
+    var i, ak = a.childNodes, bk = b.childNodes, n = Math.min(ak.length, bk.length);
+    for (i = 0; i < n; i++) syncNode(ak[i], bk[i]);
+    while (a.childNodes.length > bk.length) a.removeChild(a.lastChild);
+    for (i = n; i < bk.length; i++) a.appendChild(bk[i].cloneNode(true));
+  }
   function render() {
     var app = $('app');
-    app.innerHTML = (S.A.items.length ? focusBar() : '') + (S.A.items.length ? secOverview() + secEvolution() + secRound() + secMessages() : secEmpty());
+    var html = (S.A.items.length ? secOverview() + secEvolution() + secRound() + secMessages() + focusBar() : secEmpty());
+    if (!app.firstChild || !app.querySelector('section, .fbar')) app.innerHTML = html;
+    else { var nx = document.createElement('main'); nx.innerHTML = html; syncKids(app, nx); }
+    document.body.classList.toggle('hasfocus', !!S.focus);
     var m = S.meta;
     $('foot').innerHTML = (m ? 'Base: ' + esc(m.fileName || 'planilha') + ' · ' + m.count + ' atendimentos · enviada em ' + esc(fdt((m.uploadedAt || '').slice(0, 16).replace(' ', 'T'))) : S.A.items.length ? 'Base carregada neste navegador (não salva)' : 'Sem base') + (S.static && S.fromLocal ? ' · salva só neste navegador' : '');
   }
@@ -816,8 +859,8 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     else if (a === 'confirmUpload') confirmUpload();
     else if (a === 'saveCfg') saveCfg();
     else if (a === 'dlBase') { var blob = new Blob([JSON.stringify({ meta: S.meta, cfg: S.cfg, records: S.records })], { type: 'application/json' }), u = URL.createObjectURL(blob), al = document.createElement('a'); al.href = u; al.download = 'base.json'; document.body.appendChild(al); al.click(); al.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 1000); }
-    else if (a === 'selAll') { var rs = roundsOf(d.type), all = rs.every(function (r) { return S.sel[r.id]; }), other = S.A.rounds.some(function (r) { return r.type !== d.type && S.sel[r.id]; }); if (all && !other) return; rs.forEach(function (r) { S.sel[r.id] = !all; }); render(); }
-    else if (a === 'selToggle') { var n = S.A.rounds.filter(function (r) { return S.sel[r.id]; }).length; if (S.sel[d.id] && n === 1) return; S.sel[d.id] = !S.sel[d.id]; render(); }
+    else if (a === 'selAll') { S.A.rounds.forEach(function (r) { S.sel[r.id] = true; }); keepScope(); render(); }
+    else if (a === 'selOne') { S.A.rounds.forEach(function (r) { S.sel[r.id] = r.id === d.id; }); keepScope(); render(); }
     else if (a === 'tab') { S.tab = d.id; render(); }
     else if (a === 'cmDay') { S.cm.day = d.id ? (S.cm.day === d.id ? null : d.id) : null; S.cm.limit = 40; render(); }
     else if (a === 'cmOut') { S.cm.out = d.k; S.cm.limit = 40; render(); }
@@ -833,11 +876,10 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     if (t.id === 'pendTest') { S.pendTest = t.value; S.pendMap = {}; baseModal(); }
     else if (t.classList && t.classList.contains('pdate')) { var dd = t.getAttribute('data-d'); if (t.value === S.pendTest) delete S.pendMap[dd]; else S.pendMap[dd] = t.value; baseModal(); }
   });
-  /* tooltip das barras de desfecho */
-  var tipEl = $('tip');
-  function tipShow(seg, x, y) {
-    var n = +seg.getAttribute('data-tn'), tot = +seg.getAttribute('data-tt');
-    tipEl.innerHTML = esc(seg.getAttribute('data-tl')) + '<br><b>' + n + '</b> de ' + tot + ' atendimento' + (tot === 1 ? '' : 's') + ' · <b>' + seg.getAttribute('data-tp') + '%</b>';
+  /* tooltip: qualquer elemento com data-tip (barras de desfecho, blocos de "Sim") */
+  var tipEl = $('tip'), tipCur = null;
+  function tipShow(el, x, y) {
+    if (tipCur !== el) { tipCur = el; tipEl.innerHTML = el.getAttribute('data-tip'); }
     tipEl.style.display = 'block';
     var w = tipEl.offsetWidth, h = tipEl.offsetHeight, nx = x + 14, ny = y - h - 12;
     if (nx + w > window.innerWidth - 8) nx = x - w - 14;
@@ -845,10 +887,10 @@ if (false) module.exports = { testOf: testOf, parseDelimited: parseDelimited, ta
     if (ny < 8) ny = y + 18;
     tipEl.style.left = nx + 'px'; tipEl.style.top = ny + 'px';
   }
-  function tipHide() { tipEl.style.display = 'none'; }
-  document.addEventListener('mousemove', function (e) { var seg = e.target.closest && e.target.closest('.dist i[data-tn]'); if (seg) tipShow(seg, e.clientX, e.clientY); else tipHide(); });
+  function tipHide() { tipEl.style.display = 'none'; tipCur = null; }
+  document.addEventListener('mousemove', function (e) { var el = e.target.closest && e.target.closest('[data-tip]'); if (el) tipShow(el, e.clientX, e.clientY); else if (tipCur) tipHide(); });
   document.addEventListener('mouseleave', tipHide);
-  document.addEventListener('touchstart', function (e) { var seg = e.target.closest && e.target.closest('.dist i[data-tn]'); if (seg && e.touches[0]) tipShow(seg, e.touches[0].clientX, e.touches[0].clientY); else tipHide(); }, { passive: true });
+  document.addEventListener('touchstart', function (e) { var el = e.target.closest && e.target.closest('[data-tip]'); if (el && e.touches[0]) tipShow(el, e.touches[0].clientX, e.touches[0].clientY); else tipHide(); }, { passive: true });
   document.addEventListener('scroll', tipHide, true);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); else if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('clk')) { e.preventDefault(); e.target.click(); } });
   $('today').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
